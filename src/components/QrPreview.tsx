@@ -49,7 +49,7 @@ export function QrPreview({
         {/* The canvas stays mounted so the ref is available before the first render. */}
         <canvas
           ref={canvasRef}
-          className={`preview__canvas${showCanvas ? '' : ' preview__canvas--stale'}`}
+          className="preview__canvas"
           role="img"
           aria-label={showCanvas ? `QR code for ${encoded.slice(0, 120)}` : 'QR code preview'}
           hidden={!showCanvas}

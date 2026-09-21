@@ -53,10 +53,3 @@ export function isInverted(foreground: string, background: string): boolean {
   if (!fg || !bg) return false;
   return relativeLuminance(fg) > relativeLuminance(bg);
 }
-
-/** Picks black or white text that reads on top of the supplied colour. */
-export function readableTextOn(background: string): string {
-  return contrastRatio('#000000', background) >= contrastRatio('#ffffff', background)
-    ? '#000000'
-    : '#ffffff';
-}
