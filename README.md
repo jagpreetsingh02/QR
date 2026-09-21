@@ -124,9 +124,9 @@ npx vercel --prod # production
 
 Or import the repository in the Vercel dashboard — no environment variables are needed.
 
-This project is already deployed to production at the URL above. Note that Vercel enables
-**Deployment Protection** on new projects, which puts a Vercel login in front of the site; turn it
-off under *Project → Settings → Deployment Protection* for the link to be publicly shareable.
+This project is already deployed to production at the URL above, with Deployment Protection
+disabled so the link is publicly shareable. (Vercel enables it by default on new projects; the
+toggle lives under *Project → Settings → Deployment Protection*.)
 
 ---
 
@@ -179,6 +179,9 @@ rendered canvas pixels with a QR decoder (`jsQR`) so "it scans" is proven rather
 - **Theme** — toggles and persists across a reload.
 - **Responsive** — no horizontal overflow at 375 px, 834 px or 1440 px.
 - **No console errors** during the entire run.
+
+The same suite was run three ways — against the Vite dev server, against the production build
+served by `vite preview`, and against the deployed Vercel URL — passing 54/54 each time.
 
 That suite caught a real stacking bug: the pinned preview column was being painted over by the
 positioned history thumbnails, which is now fixed with an explicit `z-index`.
