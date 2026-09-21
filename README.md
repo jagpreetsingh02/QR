@@ -1,5 +1,7 @@
 # QR Studio — QR Code Generator & Designer
 
+**Live:** https://qr-studio-jagpreet-singh1.vercel.app
+
 A browser-only QR code generator and designer built for the **GDG on Campus SRM Technical
 Recruitment 2026** frontend task. Pick what the code should do, design it, check that it will
 actually scan, and download it as PNG or SVG. There is no backend — every byte stays on the
@@ -121,6 +123,10 @@ npx vercel --prod # production
 ```
 
 Or import the repository in the Vercel dashboard — no environment variables are needed.
+
+This project is already deployed to production at the URL above. Note that Vercel enables
+**Deployment Protection** on new projects, which puts a Vercel login in front of the site; turn it
+off under *Project → Settings → Deployment Protection* for the link to be publicly shareable.
 
 ---
 
