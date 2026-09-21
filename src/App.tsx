@@ -173,7 +173,7 @@ export default function App() {
 
       <main className="main">
         <div className="shell layout">
-          <section className="card area-content" aria-labelledby="content-title">
+          <section className="card pane--content" aria-labelledby="content-title">
             <div className="card__header">
               <span className="card__step" aria-hidden="true">1</span>
               <div className="card__headings">
@@ -184,12 +184,19 @@ export default function App() {
               </div>
             </div>
             <div className="stack">
-              <TypeSelector value={type} onChange={(next) => { setType(next); setActiveId(null); }} />
+              <TypeSelector
+                value={type}
+                onChange={(next) => {
+                  setType(next);
+                  setActiveId(null);
+                }}
+              />
               <ContentForm content={content} errors={errors} onChange={updateContent} />
             </div>
           </section>
 
-          <div className="area-preview">
+          {/* Placed here so the DOM order matches the mobile reading order. */}
+          <div className="pane--preview">
             <QrPreview
               canvasRef={canvasRef}
               style={style}
@@ -203,7 +210,7 @@ export default function App() {
             />
           </div>
 
-          <section className="card area-presets" aria-labelledby="presets-title">
+          <section className="card pane--presets" aria-labelledby="presets-title">
             <div className="card__header">
               <span className="card__step" aria-hidden="true">2</span>
               <div className="card__headings">
@@ -216,28 +223,28 @@ export default function App() {
             <PresetPicker style={style} onApply={applyPreset} />
           </section>
 
-          <section className="card area-style" aria-labelledby="style-title">
+          <section className="card pane--style" aria-labelledby="style-title">
             <div className="card__header">
               <span className="card__step" aria-hidden="true">3</span>
               <div className="card__headings">
-                <div className="row-between">
-                  <div>
-                    <h2 className="card__title" id="style-title">
-                      Customise
-                    </h2>
-                    <p className="card__hint">Every change is reflected in the preview and in your download.</p>
-                  </div>
-                  <button type="button" className="btn btn--ghost btn--sm" onClick={() => setStyle(DEFAULT_STYLE)}>
-                    <Icon name="restore" size={14} />
-                    Reset design
-                  </button>
-                </div>
+                <h2 className="card__title" id="style-title">
+                  Customise
+                </h2>
+                <p className="card__hint">Every change is reflected in the preview and in your download.</p>
               </div>
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm card__action"
+                onClick={() => setStyle(DEFAULT_STYLE)}
+              >
+                <Icon name="restore" size={14} />
+                Reset design
+              </button>
             </div>
             <StyleControls style={style} onChange={updateStyle} />
           </section>
 
-          <div className="area-history">
+          <div className="pane--history">
             <HistoryPanel
               entries={entries}
               activeId={activeId}

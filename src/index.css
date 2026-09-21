@@ -48,6 +48,7 @@
   --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 
   --header-h: 64px;
+  --gap: clamp(16px, 2vw, 22px);
 }
 
 :root[data-theme='dark'] {
@@ -249,8 +250,15 @@ button {
 
 .layout {
   display: grid;
-  gap: clamp(16px, 2vw, 22px);
+  gap: var(--gap);
   align-items: start;
+  /*
+   * Single column on small screens, with the preview placed directly under the
+   * form. From the large breakpoint the preview moves into its own column and
+   * spans the three editor cards, which is what lets it stay pinned while they
+   * scroll. History keeps a full-width row of its own so the pinned preview can
+   * never overlap it.
+   */
   grid-template-areas:
     'content'
     'preview'
@@ -259,15 +267,15 @@ button {
     'history';
 }
 
-.area-content { grid-area: content; }
-.area-preview { grid-area: preview; min-width: 0; }
-.area-presets { grid-area: presets; }
-.area-style { grid-area: style; }
-.area-history { grid-area: history; }
+.pane--content { grid-area: content; }
+.pane--preview { grid-area: preview; min-width: 0; }
+.pane--presets { grid-area: presets; }
+.pane--style { grid-area: style; }
+.pane--history { grid-area: history; }
 
 @media (min-width: 1024px) {
   .layout {
-    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.78fr);
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.72fr);
     grid-template-areas:
       'content preview'
       'presets preview'
@@ -275,9 +283,11 @@ button {
       'history history';
   }
 
-  .area-preview {
+  .pane--preview {
     position: sticky;
     top: calc(var(--header-h) + 20px);
+    /* History items are positioned, so keep the pinned preview above them. */
+    z-index: 1;
   }
 }
 
@@ -337,6 +347,10 @@ button {
 .card__headings {
   min-width: 0;
   flex: 1;
+}
+
+.card__action {
+  flex-shrink: 0;
 }
 
 /* --- Buttons ------------------------------------------------------------ */
@@ -785,7 +799,7 @@ button {
 /* --- Presets ------------------------------------------------------------ */
 .presets {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(134px, 1fr));
   gap: 8px;
 }
 
@@ -1202,10 +1216,3 @@ button {
   gap: 16px;
 }
 
-.row-between {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}

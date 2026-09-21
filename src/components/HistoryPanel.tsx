@@ -40,21 +40,17 @@ export function HistoryPanel({ entries, activeId, onRestore, onRemove, onClear }
           <Icon name="restore" size={14} />
         </span>
         <div className="card__headings">
-          <div className="row-between">
-            <div>
-              <h2 className="card__title" id="history-title">
-                Recent codes
-              </h2>
-              <p className="card__hint">Saved in this browser only. Select one to restore its data and design.</p>
-            </div>
-            {entries.length > 0 ? (
-              <button type="button" className="btn btn--ghost btn--sm" onClick={onClear}>
-                <Icon name="trash" size={14} />
-                Clear all
-              </button>
-            ) : null}
-          </div>
+          <h2 className="card__title" id="history-title">
+            Recent codes
+          </h2>
+          <p className="card__hint">Saved in this browser only. Select one to restore its data and design.</p>
         </div>
+        {entries.length > 0 ? (
+          <button type="button" className="btn btn--ghost btn--sm card__action" onClick={onClear}>
+            <Icon name="trash" size={14} />
+            Clear all
+          </button>
+        ) : null}
       </div>
 
       {entries.length === 0 ? (

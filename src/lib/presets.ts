@@ -15,7 +15,7 @@ export interface Preset extends PresetStyle {
 export const PRESETS: Preset[] = [
   { id: 'classic', name: 'Classic', foreground: '#111827', background: '#ffffff', margin: 4 },
   { id: 'midnight', name: 'Midnight', foreground: '#f8fafc', background: '#0b1120', margin: 4 },
-  { id: 'campus-blue', name: 'Campus Blue', foreground: '#174ea6', background: '#e8f0fe', margin: 4 },
+  { id: 'campus-blue', name: 'Campus', foreground: '#174ea6', background: '#e8f0fe', margin: 4 },
   { id: 'forest', name: 'Forest', foreground: '#14532d', background: '#ecfdf5', margin: 4 },
   { id: 'sunset', name: 'Sunset', foreground: '#7c2d12', background: '#fff7ed', margin: 5 },
   { id: 'grape', name: 'Grape', foreground: '#4c1d95', background: '#f5f3ff', margin: 4 },

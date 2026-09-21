@@ -84,7 +84,13 @@ export function QrPreview({
           <Icon name="download" size={16} />
           Download PNG
         </button>
-        <button type="button" className="btn btn--ghost" disabled={!showCanvas} onClick={onDownloadSvg}>
+        <button
+          type="button"
+          className="btn btn--ghost"
+          disabled={!showCanvas}
+          onClick={onDownloadSvg}
+          aria-label="Download SVG"
+        >
           <Icon name="download" size={16} />
           SVG
         </button>
