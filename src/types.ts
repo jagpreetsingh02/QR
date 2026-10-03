@@ -29,21 +29,43 @@ export type ContentOf<T extends QrType> = Extract<QrContent, { type: T }>;
 /** One draft per type, so switching types never loses what was typed. */
 export type ContentDrafts = { [T in QrType]: ContentOf<T> };
 
-/** How a photo is combined with the code. */
-export type PhotoMode = 'tint' | 'underlay';
+/** How a photo is combined with the code. `dots` is the halftone Photo QR. */
+export type PhotoMode = 'dots' | 'tint' | 'underlay';
+export type DotShape = 'circle' | 'rounded' | 'square';
 
 /**
- * Optional photo style. The image only ever lives in memory: it is never put
- * in the URL or saved to recent codes (only the rendered thumbnail is).
+ * Optional photo style. The image is processed locally; at runtime `src` is
+ * an object URL and `ref` points at the downscaled blob in IndexedDB. It is
+ * never put in the URL, and recent codes keep only the reference.
  */
 export interface PhotoStyle {
-  /** Downscaled photo as a data URL. */
+  /** Object URL (or data URL) of the downscaled photo; empty in saved history. */
   src: string;
+  /** IndexedDB id of the stored blob, when storage is available. */
+  ref?: string | null;
   mode: PhotoMode;
-  /** How much of the photo shows through, 0–100. */
+  /** Tinted/underlay: how much of the photo shows, 0–100. */
   strength: number;
-  /** How strongly dark modules are separated from light ones, 0–100. */
+  /** Tinted/underlay: separation between dark and light modules, 0–100. */
   contrast: number;
+  /** Dots: dot diameter as a percentage of the module, 25–80. */
+  dotScale: number;
+  dotShape: DotShape;
+  /** Dots: opposite-ink halo strength, 0–100 (scaled by the photo's local tone). */
+  halo: number;
+  /** Dots: opacity of the light plate behind each eye, 50–100. */
+  eyeOpacity: number;
+  /** Photo adjustments: brightness and contrast −50…50, saturation 0–200 (%). */
+  brightness: number;
+  photoContrast: number;
+  saturation: number;
+  /** Compresses the photo's tones toward mid-grey so both inks stay visible, 0–100. */
+  readability: number;
+  /** Rounded plate behind the whole code, with an optional border colour. */
+  plate: boolean;
+  border: string;
+  /** Extra QR versions above the minimum (0 = auto): more, smaller modules. */
+  detail: number;
 }
 
 /** Visual + encoding settings applied to the rendered QR code. */
@@ -58,8 +80,10 @@ export interface QrStyle {
   ecc: EccLevel;
   /** Quiet-zone width measured in modules. */
   margin: number;
-  /** Optional centre logo as a data URL. */
+  /** Optional centre logo (object URL at runtime, data URL in older entries). */
   logo: string | null;
+  /** IndexedDB id of the stored logo blob. */
+  logoRef?: string | null;
   /** Logo width as a percentage of the QR edge. */
   logoScale: number;
   /** Optional photo style; `null` renders the plain code. */
@@ -88,6 +112,6 @@ export interface HistoryEntry {
   style: QrStyle;
   /** Small PNG data URL used for the history thumbnail. */
   thumbnail: string;
-  /** True when the code used a photo style; the photo itself is never stored. */
+  /** Legacy flag from builds that never stored photos. */
   photoOmitted?: boolean;
 }

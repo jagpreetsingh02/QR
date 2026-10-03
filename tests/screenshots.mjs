@@ -5,9 +5,10 @@
 import { chromium } from 'playwright';
 import os from 'node:os';
 import path from 'node:path';
-import { writeTestPhoto } from './fixtures.mjs';
+import { writeFacePhoto, writeTestPhoto } from './fixtures.mjs';
 
 const testPhoto = writeTestPhoto(path.join(os.tmpdir(), 'qr-studio-photo.png'));
+const facePhoto = writeFacePhoto(path.join(os.tmpdir(), 'qr-studio-face.png'));
 
 const base = (process.argv[2] ?? 'http://localhost:4180').replace(/\/$/, '');
 const browser = await chromium.launch();
@@ -31,8 +32,11 @@ const shots = [
   { file: 'tablet.png', route: '/studio', viewport: { width: 834, height: 1112 }, theme: 'light', studio: true },
   { file: 'mobile.png', route: '/studio', viewport: { width: 390, height: 844 }, theme: 'light', studio: true },
   { file: 'landing-mobile.png', route: '/', viewport: { width: 390, height: 844 }, theme: 'dark' },
-  { file: 'photo-tint.png', route: '/studio', viewport: { width: 1440, height: 900 }, theme: 'light', photo: 'Tinted modules' },
-  { file: 'photo-underlay.png', route: '/studio', viewport: { width: 1440, height: 900 }, theme: 'dark', photo: 'Photo underlay' },
+  { file: 'photo-dots-light.png', route: '/studio', viewport: { width: 1440, height: 900 }, theme: 'light', photo: 'Dots', file2: 'face' },
+  { file: 'photo-dots-dark.png', route: '/studio', viewport: { width: 1440, height: 900 }, theme: 'dark', photo: 'Dots' },
+  { file: 'photo-mobile.png', route: '/studio', viewport: { width: 390, height: 844 }, theme: 'light', photo: 'Dots', file2: 'face' },
+  { file: 'photo-tint.png', route: '/studio', viewport: { width: 1440, height: 900 }, theme: 'light', photo: 'Tinted' },
+  { file: 'photo-underlay.png', route: '/studio', viewport: { width: 1440, height: 900 }, theme: 'dark', photo: 'Underlay' },
 ];
 
 for (const s of shots) {
@@ -42,15 +46,16 @@ for (const s of shots) {
   await page.goto(base + s.route, { waitUntil: 'networkidle' });
   if (s.studio) await fillStudio(page, s.viewport.width >= 768);
   if (s.photo) {
-    await page.getByLabel('Website URL').fill('gdg.community.dev/gdg-on-campus-srm');
+    await page.getByLabel('Website URL').fill(s.photo === 'Dots' ? 'gdg.dev/srm' : 'gdg.community.dev/gdg-on-campus-srm');
+    if (s.viewport.width < 768) await page.getByRole('button', { name: 'Design', exact: true }).click();
+    await page.getByRole('tab', { name: /^Photo/ }).click();
     const chooser = page.waitForEvent('filechooser');
-    await page.getByRole('button', { name: /Add a photo style/ }).click();
-    await (await chooser).setFiles(testPhoto);
-    await page.getByRole('radio', { name: s.photo }).click();
-    if (s.photo === 'Photo underlay') await page.getByLabel('Photo strength').fill('85');
-    await page.waitForTimeout(1500);
-    // Show the photo controls in the design column.
-    await page.locator('.photo-style').scrollIntoViewIfNeeded();
+    await page.getByRole('button', { name: /Add a photo/ }).click();
+    await (await chooser).setFiles(s.file2 === 'face' ? facePhoto : testPhoto);
+    await page.getByRole('radiogroup', { name: 'Blend' }).getByRole('radio', { name: s.photo }).click();
+    if (s.photo === 'Underlay') await page.getByLabel('Photo strength').fill('85');
+    await page.waitForTimeout(1800);
+    if (s.viewport.width < 768) await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(300);
   }
   if (s.full) {

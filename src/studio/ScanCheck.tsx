@@ -59,11 +59,11 @@ export function ScanCheck({ style, warnings, active, decode = null, onBoost, boo
             <span>
               {decode === 'pass' ? (
                 <>
-                  <strong>Test scan passed.</strong> This browser decoded the photo style back to your exact content.
+                  <strong>Test scan passed.</strong> This browser decoded the photo QR back to your exact content. A phone camera is stricter than this decoder, so test with a real phone before printing.
                 </>
               ) : decode === 'fail' ? (
                 <>
-                  <strong>Test scan failed.</strong> The photo hides too much for a reliable read.
+                  <strong>Test scan failed.</strong> The photo hides too much for a reliable read. Boost readability, or try a calmer photo or shorter content.
                 </>
               ) : (
                 <>Test-scanning the photo style…</>

@@ -3,14 +3,13 @@ import type { ChangeEvent, DragEvent } from 'react';
 import { Icon } from '../components/Icon';
 import { SliderField } from '../components/fields';
 
-/** Data URLs are stored in localStorage with the history entry, so keep uploads small. */
-export const MAX_LOGO_BYTES = 256 * 1024;
-const ACCEPTED = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml', 'image/gif'];
+import { ImageError, LOGO_RULES, processImage } from '../lib/images';
+import { putImage } from '../lib/imageStore';
 
 interface LogoDropProps {
   logo: string | null;
   logoScale: number;
-  onLogoChange: (logo: string | null) => void;
+  onLogoChange: (logo: string | null, ref?: string | null) => void;
   onScaleChange: (scale: number) => void;
 }
 
@@ -21,33 +20,38 @@ export function LogoDrop({ logo, logoScale, onLogoChange, onScaleChange }: LogoD
   const [dragging, setDragging] = useState(false);
   const errorId = useId();
 
-  const accept = (file: File | undefined) => {
+  const [busy, setBusy] = useState(false);
+
+  // Decoded, downscaled to 1024 px and stored locally in IndexedDB (never uploaded).
+  const accept = async (file: File | undefined) => {
     if (!file) return;
-    if (!ACCEPTED.includes(file.type)) return setError('Use a PNG, JPG, WebP, GIF or SVG image.');
-    if (file.size > MAX_LOGO_BYTES) return setError(`That image is ${Math.round(file.size / 1024)} KB. Keep logos under ${MAX_LOGO_BYTES / 1024} KB.`);
-    const reader = new FileReader();
-    reader.onload = () => {
+    setBusy(true);
+    try {
+      const blob = await processImage(file, LOGO_RULES);
+      const ref = await putImage(blob);
       setError(null);
-      onLogoChange(typeof reader.result === 'string' ? reader.result : null);
-    };
-    reader.onerror = () => setError('That image could not be read. Try another file.');
-    reader.readAsDataURL(file);
+      onLogoChange(URL.createObjectURL(blob), ref);
+    } catch (cause) {
+      setError(cause instanceof ImageError ? cause.message : 'That logo could not be read. Try another file.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const onInput = (event: ChangeEvent<HTMLInputElement>) => {
-    accept(event.target.files?.[0]);
+    void accept(event.target.files?.[0]);
     event.target.value = ''; // allow choosing the same file again
   };
 
   const onDrop = (event: DragEvent) => {
     event.preventDefault();
     setDragging(false);
-    accept(event.dataTransfer.files?.[0]);
+    void accept(event.dataTransfer.files?.[0]);
   };
 
   return (
     <div className="logo-drop">
-      <input ref={inputRef} className="visually-hidden" type="file" accept={ACCEPTED.join(',')} onChange={onInput} aria-label="Upload a centre logo" tabIndex={-1} />
+      <input ref={inputRef} className="visually-hidden" type="file" accept={LOGO_RULES.types.join(',')} onChange={onInput} aria-label="Upload a centre logo" tabIndex={-1} />
       {logo ? (
         <>
           <div className="logo-drop__current">
@@ -57,14 +61,14 @@ export function LogoDrop({ logo, logoScale, onLogoChange, onScaleChange }: LogoD
               <span>Raise error correction to Q or H.</span>
             </span>
             <button type="button" className="icon-button" onClick={() => inputRef.current?.click()} aria-label="Replace logo">
-              <Icon name="restore" size={18} />
+              <Icon name="swap" size={18} />
             </button>
             <button
               type="button"
               className="icon-button"
               onClick={() => {
                 setError(null);
-                onLogoChange(null);
+                onLogoChange(null, null);
               }}
               aria-label="Remove logo"
             >
@@ -88,8 +92,8 @@ export function LogoDrop({ logo, logoScale, onLogoChange, onScaleChange }: LogoD
         >
           <Icon name="image" size={22} />
           <span>
-            <strong>{dragging ? 'Drop to add the logo' : 'Add a centre logo'}</strong>
-            <span>Drag an image here or click. PNG, JPG, WebP, GIF or SVG, up to {MAX_LOGO_BYTES / 1024} KB.</span>
+            <strong>{busy ? 'Preparing logo…' : dragging ? 'Drop to add the logo' : 'Add a centre logo'}</strong>
+            <span>Drag an image here or click. PNG, JPG, WebP, GIF, AVIF up to 10 MB, or SVG up to 2 MB.</span>
           </span>
         </button>
       )}

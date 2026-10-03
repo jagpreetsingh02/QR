@@ -1,19 +1,6 @@
 import QRCode from 'qrcode';
 import type { BitMatrix } from 'qrcode';
 import type { QrStyle } from '../types';
-import type { Rgb } from './colour';
-import {
-  atLeastQ,
-  darkenToContrast,
-  lightPhotoShare,
-  mix,
-  plateOpacity,
-  preparePhoto,
-  rgbOf,
-  targetContrast,
-  toHex,
-  underlayOpacity,
-} from './photo';
 
 /** Thrown when the payload or the canvas cannot produce an image. */
 export class QrRenderError extends Error {}
@@ -55,7 +42,7 @@ interface Geometry {
   offset: number;
 }
 
-function geometry(matrix: BitMatrix, style: QrStyle): Geometry {
+export function geometry(matrix: BitMatrix, style: QrStyle): Geometry {
   const cells = matrix.size + style.margin * 2;
   return { cells, edges: cellEdges(cells, style.size), offset: style.margin };
 }
@@ -105,125 +92,31 @@ function logoBox(style: QrStyle): { x: number; y: number; size: number; pad: num
 }
 
 /** Error correction actually used: a photo style raises it to at least Q. */
-const renderEcc = (style: QrStyle) => (style.photo ? atLeastQ(style.ecc) : style.ecc);
+export const renderEcc = (style: QrStyle): QrStyle['ecc'] => (style.photo && (style.ecc === 'L' || style.ecc === 'M') ? 'Q' : style.ecc);
 
-/**
- * Photo styles are described once as a list of draw operations on the shared
- * geometry; the canvas executes the list and the SVG serialises the same list,
- * so the preview, the PNG and the SVG cannot diverge.
- */
-type PhotoOp =
-  | { kind: 'rect'; x: number; y: number; w: number; h: number; fill: string; opacity?: number }
-  | { kind: 'image'; source: HTMLCanvasElement; x: number; y: number; w: number; h: number; opacity?: number };
+/** The photo engine is its own chunk: pages that never use a photo never load it. */
+const photoEngine = () => import('./photoRender');
 
-async function photoOps(matrix: BitMatrix, style: QrStyle): Promise<PhotoOp[]> {
-  const photo = style.photo!;
+/** Draws the plain code onto a 2D context sized `style.size` x `style.size`. */
+function paint(ctx: CanvasRenderingContext2D, matrix: BitMatrix, style: QrStyle): void {
   const { edges, offset } = geometry(matrix, style);
-  const start = edges[offset];
-  const span = edges[offset + matrix.size] - start;
-  const prepared = await preparePhoto(photo.src, span);
-  const bg = rgbOf(style.background);
-  const fg = rgbOf(style.foreground);
 
-  // The quiet zone stays plain: the photo only covers the data area.
-  const ops: PhotoOp[] = [{ kind: 'rect', x: 0, y: 0, w: style.size, h: style.size, fill: style.background }];
+  ctx.fillStyle = style.background;
+  ctx.fillRect(0, 0, style.size, style.size);
 
-  const sample = (x: number, y: number): Rgb => {
-    const px = Math.min(span - 1, Math.max(0, Math.floor(x - start)));
-    const py = Math.min(span - 1, Math.max(0, Math.floor(y - start)));
-    const i = (py * span + px) * 4;
-    return { r: prepared.pixels[i], g: prepared.pixels[i + 1], b: prepared.pixels[i + 2] };
-  };
-
-  const share = lightPhotoShare(photo);
-  if (photo.mode === 'tint') {
-    // Light modules: a faded copy of the photo.
-    const faded = document.createElement('canvas');
-    faded.width = span;
-    faded.height = span;
-    const fctx = faded.getContext('2d');
-    if (!fctx) throw new QrRenderError('This browser did not provide a 2D canvas context.');
-    fctx.drawImage(prepared.canvas, 0, 0);
-    fctx.globalAlpha = 1 - share;
-    fctx.fillStyle = style.background;
-    fctx.fillRect(0, 0, span, span);
-    ops.push({ kind: 'image', source: faded, x: start, y: start, w: span, h: span });
-  } else {
-    ops.push({ kind: 'image', source: prepared.canvas, x: start, y: start, w: span, h: span, opacity: underlayOpacity(photo) });
-  }
-
-  const ratio = targetContrast(photo);
-  const plate = plateOpacity(photo);
+  ctx.fillStyle = style.foreground;
   for (let row = 0; row < matrix.size; row += 1) {
     for (let col = 0; col < matrix.size; col += 1) {
+      if (!matrix.get(row, col)) continue;
       const x = edges[col + offset];
       const y = edges[row + offset];
-      const w = edges[col + offset + 1] - x;
-      const h = edges[row + offset + 1] - y;
-      const dark = Boolean(matrix.get(row, col));
-
-      // Finder, timing and alignment patterns (and format/version info) stay solid.
-      if (matrix.isReserved(row, col)) {
-        ops.push({ kind: 'rect', x, y, w, h, fill: dark ? style.foreground : style.background });
-      } else if (photo.mode === 'tint') {
-        if (!dark) continue; // the faded photo shows through
-        const pixel = sample(x + w / 2, y + h / 2);
-        const tinted = mix(fg, pixel, photo.strength / 100);
-        const localLight = mix(pixel, bg, 1 - share);
-        ops.push({ kind: 'rect', x, y, w, h, fill: toHex(darkenToContrast(tinted, [localLight, bg], ratio)) });
-      } else if (dark) {
-        ops.push({ kind: 'rect', x, y, w, h, fill: style.foreground });
-      } else {
-        ops.push({ kind: 'rect', x, y, w, h, fill: style.background, opacity: plate });
-      }
+      ctx.fillRect(x, y, edges[col + offset + 1] - x, edges[row + offset + 1] - y);
     }
   }
-  return ops;
 }
 
-function drawOps(ctx: CanvasRenderingContext2D, ops: PhotoOp[]): void {
-  for (const op of ops) {
-    ctx.globalAlpha = op.opacity ?? 1;
-    if (op.kind === 'rect') {
-      ctx.fillStyle = op.fill;
-      ctx.fillRect(op.x, op.y, op.w, op.h);
-    } else {
-      ctx.drawImage(op.source, op.x, op.y, op.w, op.h);
-    }
-  }
-  ctx.globalAlpha = 1;
-}
-
-function svgOps(ops: PhotoOp[]): string[] {
-  return ops.map((op) => {
-    const opacity = op.opacity === undefined ? '' : ` opacity="${op.opacity.toFixed(3)}"`;
-    if (op.kind === 'rect') return `<rect x="${op.x}" y="${op.y}" width="${op.w}" height="${op.h}" fill="${op.fill}"${opacity}/>`;
-    // The processed photo is embedded as a data URI, so the SVG is self-contained.
-    return `<image x="${op.x}" y="${op.y}" width="${op.w}" height="${op.h}" preserveAspectRatio="none"${opacity} href="${op.source.toDataURL('image/jpeg', 0.92)}"/>`;
-  });
-}
-
-/** Draws the code onto a 2D context sized `style.size` x `style.size`. */
-async function paint(ctx: CanvasRenderingContext2D, matrix: BitMatrix, style: QrStyle): Promise<void> {
-  if (style.photo) {
-    drawOps(ctx, await photoOps(matrix, style));
-  } else {
-    const { edges, offset } = geometry(matrix, style);
-
-    ctx.fillStyle = style.background;
-    ctx.fillRect(0, 0, style.size, style.size);
-
-    ctx.fillStyle = style.foreground;
-    for (let row = 0; row < matrix.size; row += 1) {
-      for (let col = 0; col < matrix.size; col += 1) {
-        if (!matrix.get(row, col)) continue;
-        const x = edges[col + offset];
-        const y = edges[row + offset];
-        ctx.fillRect(x, y, edges[col + offset + 1] - x, edges[row + offset + 1] - y);
-      }
-    }
-  }
-
+/** Draws the centre logo, if any, on its background plate. */
+async function paintLogo(ctx: CanvasRenderingContext2D, style: QrStyle): Promise<void> {
   if (!style.logo) return;
 
   const image = await loadImage(style.logo);
@@ -239,6 +132,16 @@ async function paint(ctx: CanvasRenderingContext2D, matrix: BitMatrix, style: Qr
   ctx.drawImage(image, box.x + (box.size - width) / 2, box.y + (box.size - height) / 2, width, height);
 }
 
+/** SVG files must be self-contained, so object-URL images are embedded as data URIs. */
+function dataUri(image: HTMLImageElement, src: string): string {
+  if (src.startsWith('data:')) return src;
+  const canvas = document.createElement('canvas');
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  canvas.getContext('2d')?.drawImage(image, 0, 0);
+  return canvas.toDataURL('image/png');
+}
+
 function context2d(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new QrRenderError('This browser did not provide a 2D canvas context.');
@@ -251,10 +154,22 @@ export async function renderToCanvas(
   text: string,
   style: QrStyle,
 ): Promise<void> {
-  const matrix = buildMatrix(text, renderEcc(style));
+  if (style.photo) {
+    const engine = await photoEngine();
+    const ops = await engine.photoScene(text, style);
+    canvas.width = style.size;
+    canvas.height = style.size;
+    const ctx = context2d(canvas);
+    engine.drawOps(ctx, ops);
+    await paintLogo(ctx, style);
+    return;
+  }
+  const matrix = buildMatrix(text, style.ecc);
   canvas.width = style.size;
   canvas.height = style.size;
-  await paint(context2d(canvas), matrix, style);
+  const ctx = context2d(canvas);
+  paint(ctx, matrix, style);
+  await paintLogo(ctx, style);
 }
 
 /** Renders off-screen and returns a PNG data URL identical to the preview. */
@@ -266,12 +181,13 @@ export async function renderToPngDataUrl(text: string, style: QrStyle): Promise<
 
 /** Renders the same geometry as vector markup for a lossless SVG download. */
 export async function renderToSvg(text: string, style: QrStyle): Promise<string> {
-  const matrix = buildMatrix(text, renderEcc(style));
   const layers: string[] = [];
 
   if (style.photo) {
-    layers.push(...svgOps(await photoOps(matrix, style)));
+    const engine = await photoEngine();
+    layers.push(...engine.svgOps(await engine.photoScene(text, style)));
   } else {
+    const matrix = buildMatrix(text, style.ecc);
     const { edges, offset } = geometry(matrix, style);
 
     // One path for every dark module keeps the file small and editable.
@@ -298,7 +214,7 @@ export async function renderToSvg(text: string, style: QrStyle): Promise<string>
     const height = image.naturalHeight * scale;
     layers.push(
       `<rect x="${box.x - box.pad}" y="${box.y - box.pad}" width="${box.size + box.pad * 2}" height="${box.size + box.pad * 2}" rx="${(box.size * 0.18).toFixed(2)}" fill="${style.background}"/>`,
-      `<image x="${(box.x + (box.size - width) / 2).toFixed(2)}" y="${(box.y + (box.size - height) / 2).toFixed(2)}" width="${width.toFixed(2)}" height="${height.toFixed(2)}" href="${style.logo}"/>`,
+      `<image x="${(box.x + (box.size - width) / 2).toFixed(2)}" y="${(box.y + (box.size - height) / 2).toFixed(2)}" width="${width.toFixed(2)}" height="${height.toFixed(2)}" href="${dataUri(image, style.logo)}"/>`,
     );
   }
 

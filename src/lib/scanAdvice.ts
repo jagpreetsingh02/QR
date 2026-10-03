@@ -1,6 +1,7 @@
 import type { QrStyle, ScanWarning } from '../types';
 import { contrastRatio, isInverted } from './colour';
 import { MAX_PAYLOAD_BYTES, payloadBytes } from './validation';
+import { buildMatrix, renderEcc } from './render';
 
 /** Below this WCAG ratio most camera scanners fail to separate the modules. */
 export const MIN_SAFE_CONTRAST = 4.5;
@@ -8,6 +9,8 @@ const CRITICAL_CONTRAST = 3;
 /** The QR specification asks for a four-module quiet zone. */
 const MIN_QUIET_ZONE = 4;
 const MIN_COMFORTABLE_SIZE = 200;
+/** Photo dots smaller than this read on phones but fail stricter scanners (measured with ZBar). */
+const MIN_DOT_PX = 5;
 
 /**
  * Inspects the current settings and reports choices that make a code harder to
@@ -69,6 +72,22 @@ export function getScanWarnings(style: QrStyle, encoded: string): ScanWarning[] 
         level: 'warning',
         message: `The logo covers ${style.logoScale}% of the code. Keep it at 25% or less to stay within what error correction can recover.`,
       });
+    }
+  }
+
+  if (style.photo?.mode === 'dots') {
+    try {
+      const modules = buildMatrix(encoded, renderEcc(style)).size + style.photo.detail * 4;
+      const dot = (style.size / (modules + style.margin * 2)) * (style.photo.dotScale / 100);
+      if (dot < MIN_DOT_PX) {
+        warnings.push({
+          id: 'tiny-dots',
+          level: 'info',
+          message: `The photo dots are about ${dot.toFixed(1)}px at this size. Phone cameras usually cope, but stricter scanners need bigger dots: export at 640px or more for print, or raise Dot size.`,
+        });
+      }
+    } catch {
+      // Too long for a QR code: the content panel already reports it.
     }
   }
 

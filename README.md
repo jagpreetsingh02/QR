@@ -49,37 +49,86 @@ matters because one of the types carries a Wi-Fi password.
 | Phone | `tel:+919876543210` (spaces and brackets stripped) |
 | Wi-Fi | `WIFI:T:WPA;S:GDG-Campus;P:build\;with\;gdg;;` (`\ ; , : "` escaped) |
 
-### Photo style (optional)
+### Photo QR (optional)
 
-Add a photo in **Design → Photo style** (PNG, JPG or WebP, up to 2 MB; it is downscaled to
-1024 px and processed in the tab). Two blends:
+Open **Design → Photo** and add a photo (click or drag and drop). Three blends:
 
-- **Tinted modules:** each dark module takes the colour of the photo at its centre, darkened until
-  it reaches at least 4.5:1 against the surrounding light area; light modules show a faded copy of
-  the photo.
-- **Photo underlay:** the photo sits behind a standard code at an adjustable opacity, and light
-  modules get a translucent plate so dark modules stay readable.
+- **Dots (default), a halftone photo QR.** The photo is cover-cropped over the whole code,
+  quiet zone included, on an optional rounded plate with a border colour. Every data module keeps
+  its value as a dot at the module centre, in the dark or light ink; a decoder samples module
+  centres, so the photo can show everywhere else. Where the photo is close to a dot's own ink, a
+  soft halo of the opposite ink is added, only as much as that spot needs. No data module is ever
+  skipped. The three corner eyes sit on a light translucent plate with a solid ring and centre;
+  timing and alignment patterns are drawn as full solid modules.
+  Controls: Dot size (25–80%, default 42%), Dot shape (circle, rounded, square), Halo, Eye plate
+  opacity (default 90%), Rounded plate and Border colour, plus Readability, Brightness, Photo
+  contrast and Saturation for the photo itself.
+- **Tinted:** each dark module takes the photo's colour at its centre, darkened until it contrasts.
+- **Underlay:** the photo sits behind a standard code at an adjustable strength.
 
-In both, the finder, timing and alignment patterns stay solid, the quiet zone stays plain, and
-error correction is raised to at least Q while a photo is set (the UI says so; removing the photo
-restores your original level and the exact original render). After every render the canvas is
-test-scanned in the browser with `jsQR` (loaded only when a photo is used), and the scan check
-reports pass or fail. If it fails, **Boost readability** raises contrast and lowers photo strength
-step by step until it decodes. The preview, the PNG and the SVG come from one list of draw
-operations in `render.ts`; the SVG embeds the processed photo as a data URI.
+**Detail** picks the QR version: Auto (the smallest that fits) or +2/+4/+6 versions for more,
+smaller modules and a sharper photo. A short-link tip appears for long content or high Detail, and
+content that will not fit says so. Error correction is at least Q while a photo is set (L and M are
+locked with an explanation; H is recommended). Removing the photo restores your error-correction
+level and the exact original render.
 
-Privacy: the photo never leaves the tab and is never put in the URL. Recent codes keep only the
-small thumbnail; restoring such a code brings back everything except the photo, with a note.
+**Scan check.** After every render the canvas is test-scanned in the browser with `jsQR` (loaded
+only when a photo is used) and the result is shown as pass or fail, with a note that a phone camera
+is the real test. On a fail, **Boost readability** steps dot size, halo and eye plate up and photo
+contrast down, test-scanning an off-screen render each step, and applies the first setting that
+decodes. If nothing decodes within eight steps it puts your settings back and says the photo is
+too busy, instead of pretending. A "tiny dots" advisory appears when dots fall under about 5 px.
 
-| Tinted modules | Photo underlay |
+**Exports.** Preview, PNG and SVG come from one list of draw operations. The PNG is the preview
+canvas; the SVG has vector dots, eyes and plate over the processed photo embedded as a JPEG data URI.
+
+**Uploads and storage.**
+
+| | Accepted | Size limit | Stored as |
+| --- | --- | --- | --- |
+| Photo | PNG, JPG, WebP, GIF, AVIF | 25 MB | JPEG, longest edge ≤ 2048 px |
+| Logo | PNG, JPG, WebP, GIF, AVIF; SVG | 10 MB; SVG 2 MB | PNG, longest edge ≤ 1024 px |
+
+Images are decoded with `createImageBitmap` (EXIF orientation honoured), downscaled once and
+re-encoded. HEIC, wrong types, oversize and corrupt files get a specific message. SVG logos are
+only ever drawn through an `<img>` and rasterised, never injected into the page, so scripts in them
+cannot run. Processed images go to IndexedDB (a ~70-line wrapper, no dependency); recent codes keep
+settings, a thumbnail and a reference to the stored image. Restoring a code whose image is gone
+(cleared site data, another device) restores everything else with a note. In private modes where
+IndexedDB is unavailable, the photo still works for the session and history simply has no images.
+Images never leave the device and never go in the URL.
+
+| Dots, light | Dots, dark | Mobile |
+| --- | --- | --- |
+| ![Photo QR with dots, light theme](docs/photo-dots-light.png) | ![Photo QR with dots, dark theme](docs/photo-dots-dark.png) | ![Photo QR on mobile](docs/photo-mobile.png) |
+
+| Tinted | Underlay |
 | --- | --- |
-| ![Tinted modules photo style](docs/photo-tint.png) | ![Photo underlay style](docs/photo-underlay.png) |
+| ![Tinted photo style](docs/photo-tint.png) | ![Underlay photo style](docs/photo-underlay.png) |
 
-**Honest limitation:** a photo always costs some scan reliability. Busy, dark or low-contrast
-photos at high strength can make a code fail on real phone cameras even when the in-browser test
-scan passes, because jsQR reading a perfect digital image is easier than a camera reading a
-print in poor light. Keep strength moderate, prefer calm photos, and test-scan the printed result.
-The screenshots use a synthetic test image generated by `tests/fixtures.mjs`.
+All screenshots and test photos are synthetic images drawn by [`tests/fixtures.mjs`](tests/fixtures.mjs)
+(a cartoon face, colour bands, a landscape, a checkerboard). No personal photos are used.
+
+#### Decode results (measured, not promised)
+
+`npm run test:e2e` renders 3 test photos × 5 payload types at default settings and decodes each
+canvas with **jsQR** and **ZBar** (`@undecaf/zbar-wasm`, dev dependency only):
+
+| Output size | jsQR | ZBar at defaults | Notes |
+| --- | --- | --- | --- |
+| 640 px | 15 / 15 | 14 / 15 | The miss (bands × Email) decodes with ZBar after raising Dot size to 55% |
+| 320 px (default) | 15 / 15 | 7 / 15 | ZBar misses URL, Email and most Phone codes: dots are ~3.5 px |
+
+ZBar is stricter than jsQR about small dots, which is why the app warns about tiny dots and
+recommends 640 px or more for print. A deliberately hard photo (an 8 px checkerboard) fails the
+in-app scan at defaults, and Boost readability makes it pass. Phone cameras were not part of the
+automated run. **This does not "always scan":** busy photos, long content and small sizes all
+cost reliability, and a phone reading a print in poor light is harder than a decoder reading
+pixels. Test the printed code.
+
+**Mask experiment (left out).** I tried choosing the QR mask whose data modules best agree with the
+photo's tones. Across the matrix it decoded no better than the default mask (jsQR 7/9 vs 8/9,
+ZBar 2/9 vs 3/9 in the comparison run), so it is not in the app.
 
 ### Extras
 
@@ -156,7 +205,7 @@ Lighthouse, mobile profile, production build:
 ## Testing
 
 ```bash
-npm run test:e2e        # builds, serves dist/ with vite preview, runs 110 checks in Chromium
+npm run test:e2e        # builds, serves dist/ with vite preview, runs 148 checks in Chromium
 E2E_URL=https://qr-studio-jagpreet-singh1.vercel.app node tests/e2e.mjs   # test any running site
 ```
 
@@ -175,10 +224,13 @@ E2E_URL=https://qr-studio-jagpreet-singh1.vercel.app node tests/e2e.mjs   # test
 - theme toggle and persistence; landing hero and showcase codes decode; keyboard support;
 - no horizontal overflow at 375, 834 and 1440 px in both themes; mobile export bar and preview
   reachable on the first screen; no console errors;
-- photo style: wrong type and oversize files refused; tinted and underlay codes decode to the
-  original payload; PNG equals the preview pixel for pixel; SVG embeds the photo; a heavy dark
-  underlay fails and Boost readability fixes it; Remove restores the exact original render; recent
-  codes never store the photo and a reload with a photo-based entry does not crash.
+- photo QR: wrong type, HEIC and corrupt files refused; exactly 25 MB accepted and 25 MB + 1 byte
+  refused; dots, tinted and underlay decode; ECC locked to at least Q; PNG equals the preview pixel
+  for pixel; SVG has vector dots, an embedded JPEG and no script; history stores a reference, never
+  the image; the photo comes back from IndexedDB after a reload; a missing stored photo restores
+  without it and explains why; Remove restores the exact original render and ECC; the 3 × 5 decode
+  matrix with jsQR and ZBar (results printed as INFO lines); a checkerboard photo fails and Boost
+  readability fixes it.
 
 ## Tech stack
 
@@ -191,7 +243,7 @@ E2E_URL=https://qr-studio-jagpreet-singh1.vercel.app node tests/e2e.mjs   # test
 | Fonts | Self-hosted variable fonts via Fontsource (no render-blocking font request) |
 | Styling | Hand-written CSS on generated custom-property tokens |
 | Routing | A ~50-line History-API router (`src/router.ts`, `src/Link.tsx`) |
-| Testing | Playwright; jsQR also powers the in-app photo test scan (lazy-loaded) |
+| Testing | Playwright; jsQR (also the in-app photo test scan, lazy-loaded); ZBar WASM as a second decoder in tests |
 
 ## Setup
 
@@ -250,9 +302,24 @@ tests/                  e2e.mjs, screenshots.mjs, og-image.mjs
   `tokens.css` but were not pushed to Figma, to conserve the View seat's small monthly MCP quota.
 - **Detector coverage.** Impeccable's detector ran in its regex fallback mode (its HTML/CSS parser
   modules were not installed), so contrast was measured separately rather than by the detector.
-- Logos are limited to 256 KB (stored as data URLs with each history entry); history keeps 12 codes.
-- Modules are square; there are no gradient or custom module shapes.
+- History keeps 12 codes. Images live in IndexedDB on this device only, so history restored on another device has no images.
+- Without a photo, modules are square; there are no gradients, custom module shapes, eye shapes,
+  frames or templates (planned as later priorities, not started before the deadline).
+- Photo QR at the default 320 px is below what ZBar reliably reads for longer content (see the
+  decode table); export at 640 px or more for print.
+- Figma was not updated for the Photo panel (the MCP quota was used up in the redesign); the
+  shipped CSS and DESIGN.md are the source of truth for it.
 - QR Studio generates codes; it does not read them with a camera.
+
+## Credits and research
+
+- The halftone approach follows the idea in **Chu, Chang, Lee and Mitra, "Halftone QR Codes",
+  ACM SIGGRAPH Asia 2013 (ACM Transactions on Graphics 32(6))**: a decoder only samples the centre
+  of each module, so the rest of the module can carry an image.
+- **kloet.net**'s photo QR experiments were visual inspiration for the dots look.
+- Everything here is my own implementation from those ideas. No code, images, icons or other assets
+  were copied from those works or from any QR-styling product or library; the only QR dependency is
+  `qrcode`, used for its module matrix.
 
 ---
 

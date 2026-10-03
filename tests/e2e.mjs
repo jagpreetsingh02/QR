@@ -14,7 +14,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
-import { writePng, writeTestPhoto, writeOversizePhoto } from './fixtures.mjs';
+import { scanRGBABuffer } from '@undecaf/zbar-wasm';
+import { writeTestPhoto, writeFacePhoto, writeBandsPhoto, writeBusyPhoto, writePaddedPng } from './fixtures.mjs';
 
 // ---------------------------------------------------------------- harness --
 const results = [];
@@ -30,7 +31,8 @@ async function section(name, fn) {
   try {
     await fn();
   } catch (error) {
-    check(`${name} (threw)`, false, String(error).split('\n')[0].slice(0, 160));
+    const at = String(error.stack ?? '').split('\n').find((l) => l.includes('e2e.mjs')) ?? '';
+    check(`${name} (threw)`, false, `${String(error).split('\n')[0].slice(0, 160)} ${at.trim()}`);
   }
 }
 
@@ -392,20 +394,38 @@ await section('history', async () => {
   check('clear all can be undone', (await page.locator('.recent__card').count()) === before);
 });
 
-// ---------------------------------------------------------- photo style --
-await section('photo style', async () => {
-  const PHOTO_URL = 'https://gdgsrm.dev/photo';
-  const photo = writeTestPhoto(path.join(tmp, 'photo.png'));
-  const dark = writePng(path.join(tmp, 'dark.png'), 640, 480, (x, y) => [18 + ((x + y) % 14), 20, 34 + (y % 10)]);
-  const oversize = writeOversizePhoto(path.join(tmp, 'big.png'));
+// ------------------------------------------------------------- photo QR --
+await section('photo qr', async () => {
+  const PHOTO_URL = 'https://gdg.dev/srm';
+  const MiB = 1024 * 1024;
+  const photos = {
+    face: writeFacePhoto(path.join(tmp, 'face.png')),
+    bands: writeBandsPhoto(path.join(tmp, 'bands.png')),
+    landscape: writeTestPhoto(path.join(tmp, 'landscape.png')),
+  };
+  const busy = writeBusyPhoto(path.join(tmp, 'busy.png'));
+  const underLimit = writePaddedPng(path.join(tmp, 'under.png'), 25 * MiB);
+  const overLimit = writePaddedPng(path.join(tmp, 'over.png'), 25 * MiB + 1);
 
-  const choosePhoto = async (buttonName, files) => {
+  const openPhotoTab = () => page.getByRole('tab', { name: /^Photo/ }).click();
+  const choosePhoto = async (files) => {
     const chooser = page.waitForEvent('filechooser');
-    await page.getByRole('button', { name: buttonName }).click();
+    await page.getByRole('button', { name: /Add a photo|Replace photo/ }).first().click();
     await (await chooser).setFiles(files);
   };
+  const removePhoto = () => page.getByRole('button', { name: 'Remove', exact: true }).click();
+  const photoError = async (expect = null) => {
+    let text = '';
+    for (let i = 0; i < 30; i += 1) {
+      text = (await page.locator('.photo-style .field__message.is-error').innerText({ timeout: 500 }).catch(() => '')).trim();
+      if (expect === null ? true : text.includes(expect)) break;
+      await settle(150);
+    }
+    return text;
+  };
   const decodeStatus = async () => {
-    for (let i = 0; i < 50; i += 1) {
+    await settle(300);
+    for (let i = 0; i < 60; i += 1) {
       const status = await page.locator('.decode').getAttribute('data-status').catch(() => null);
       if (status === 'pass' || status === 'fail') return status;
       await settle(150);
@@ -413,31 +433,53 @@ await section('photo style', async () => {
     return 'timeout';
   };
   const canvasUrl = () => page.evaluate(() => document.querySelector('.stage__canvas').toDataURL('image/png'));
+  const canvasPixels = async () => {
+    const d = await page.evaluate(() => {
+      const c = document.querySelector('.stage__canvas');
+      return { w: c.width, h: c.height, d: Array.from(c.getContext('2d').getImageData(0, 0, c.width, c.height).data) };
+    });
+    return { w: d.w, h: d.h, data: Uint8ClampedArray.from(d.d) };
+  };
+  const decodeBoth = async () => {
+    const { w, h, data } = await canvasPixels();
+    const j = jsQR(data, w, h)?.data ?? null;
+    const z = (await scanRGBABuffer(data.slice().buffer, w, h)).map((s) => s.decode())[0] ?? null;
+    return [j, z];
+  };
 
   await page.goto(`${base}/studio`, { waitUntil: 'networkidle' });
   await page.getByLabel('Website URL').fill(PHOTO_URL);
   await settle(500);
   const original = await canvasUrl();
   const originalEcc = await page.getByRole('radiogroup', { name: 'Error correction' }).locator('[aria-checked="true"]').innerText();
+  await openPhotoTab();
 
-  // Validation: wrong type and oversize files are refused with a clear message.
-  await choosePhoto(/Add a photo style/, { name: 'anim.gif', mimeType: 'image/gif', buffer: Buffer.from('GIF89a') });
-  await settle(300);
-  check('photo: wrong file type is refused', (await page.locator('.photo-style .field__message.is-error').innerText()).includes('PNG, JPG or WebP'));
-  await choosePhoto(/Add a photo style/, oversize);
-  await settle(500);
-  check('photo: oversize file is refused', (await page.locator('.photo-style .field__message.is-error').innerText()).includes('under 2 MB'));
+  // Upload validation: wrong type, HEIC, corrupt data and the 25 MB boundary.
+  await choosePhoto({ name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('hello') });
+  check('photo: wrong file type is refused', (await photoError('Use a PNG, JPG, WebP, GIF or AVIF photo')).includes('Use a PNG, JPG, WebP, GIF or AVIF photo'));
+  await choosePhoto({ name: 'IMG_0001.heic', mimeType: 'image/heic', buffer: Buffer.from('ftypheic') });
+  check('photo: HEIC is refused with an explanation', (await photoError('HEIC photos are not supported')).includes('HEIC photos are not supported'));
+  await choosePhoto({ name: 'broken.png', mimeType: 'image/png', buffer: Buffer.from('this is not a png at all') });
+  check('photo: corrupt file is refused', (await photoError('looks corrupt')).includes('looks corrupt'));
+  await choosePhoto(overLimit);
+  check('photo: 25 MB + 1 byte is refused', (await photoError('The limit is 25.0 MB')).includes('The limit is 25.0 MB'));
+  await choosePhoto(underLimit);
+  await page.getByRole('img', { name: 'Selected photo' }).waitFor({ timeout: 8000 }).catch(() => {});
+  check('photo: exactly 25 MB is accepted', (await page.getByRole('img', { name: 'Selected photo' }).count()) === 1 && (await photoError()) === '');
+  await removePhoto();
+  await settle(400);
 
-  // Tinted modules.
-  await choosePhoto(/Add a photo style/, photo);
-  check('photo: tinted modules pass the in-app test scan', (await decodeStatus()) === 'pass');
-  check('photo: tinted modules decode to the original payload', (await decodeCanvas())?.text === PHOTO_URL);
-  check('photo: error correction raised to at least Q', /^Q/.test(await eccRadio('Q').innerText()) && (await eccRadio('Q').getAttribute('aria-checked')) === 'true' && (await eccRadio('M').isDisabled()));
+  // Dots (the default blend) with a photo-like image.
+  await choosePhoto(photos.face);
+  check('photo: dots pass the in-app test scan', (await decodeStatus()) === 'pass');
+  check('photo: dots decode to the original payload', (await decodeCanvas())?.text === PHOTO_URL);
+  await page.getByRole('tab', { name: 'Style', exact: true }).click();
+  check('photo: error correction raised to at least Q', (await eccRadio('Q').getAttribute('aria-checked')) === 'true' && (await eccRadio('M').isDisabled()) && (await eccRadio('L').isDisabled()));
   check('photo: the canvas really changed', (await canvasUrl()) !== original);
+  await openPhotoTab();
 
-  // PNG download is the preview canvas, pixel for pixel.
-  const png = await download('Download PNG');
-  const pngBytes = fs.readFileSync(await png.path());
+  // PNG download is the preview canvas, pixel for pixel; SVG is vector dots over the embedded photo.
+  const pngBytes = fs.readFileSync(await (await download('Download PNG')).path());
   const same = await page.evaluate(async (b64) => {
     const img = new Image();
     img.src = `data:image/png;base64,${b64}`;
@@ -456,47 +498,122 @@ await section('photo style', async () => {
   }, pngBytes.toString('base64'));
   check('photo: PNG download matches the preview pixel for pixel', same);
   check('photo: downloaded PNG decodes', (await decodePng(pngBytes)) === PHOTO_URL);
-
   const svg = fs.readFileSync(await (await download('Download SVG')).path(), 'utf8');
   check('photo: SVG embeds the processed photo as a data URI', svg.includes('<image') && svg.includes('href="data:image/jpeg;base64,'));
-  check('photo: SVG keeps solid finder patterns as rects', (svg.match(/<rect /g) ?? []).length > 100);
+  check('photo: SVG draws the data modules as vector dots', (svg.match(/<circle /g) ?? []).length > 100);
+  check('photo: SVG has no script', !/<script/i.test(svg));
 
-  // Photo underlay.
-  await page.getByRole('radio', { name: 'Photo underlay' }).click();
-  check('photo: underlay passes the in-app test scan', (await decodeStatus()) === 'pass');
-  check('photo: underlay decodes to the original payload', (await decodeCanvas())?.text === PHOTO_URL);
+  // Tinted and underlay blends still work.
+  await page.getByRole('radiogroup', { name: 'Blend' }).getByRole('radio', { name: 'Tinted' }).click();
+  check('photo: tinted modules pass the test scan', (await decodeStatus()) === 'pass' && (await decodeCanvas())?.text === PHOTO_URL);
+  await page.getByRole('radiogroup', { name: 'Blend' }).getByRole('radio', { name: 'Underlay' }).click();
+  check('photo: underlay passes the test scan', (await decodeStatus()) === 'pass' && (await decodeCanvas())?.text === PHOTO_URL);
+  await page.getByRole('radiogroup', { name: 'Blend' }).getByRole('radio', { name: 'Dots' }).click();
+  await decodeStatus();
 
-  // History stores a thumbnail and a flag, never the photo.
-  await settle(1300);
+  // Recent codes keep a reference to the photo in IndexedDB, never the image itself.
+  await settle(1600);
   const stored = await page.evaluate(() => localStorage.getItem('qr-studio:history:v1') ?? '');
-  check('photo: recent codes never store the photo', !stored.includes('image/jpeg') && stored.includes('"photoOmitted":true'));
+  check('photo: recent codes store a reference, not the photo', /"ref":"[^"]+"/.test(stored) && !stored.includes('image/jpeg') && !stored.includes('blob:'));
+  check('photo: the photo is never in the URL', !page.url().includes('blob') && !page.url().includes('data:'));
 
   // Remove restores the exact original render (and the original ECC).
-  await page.getByRole('button', { name: 'Remove', exact: true }).click();
+  await removePhoto();
   await settle(600);
   check('photo: removing the photo restores the exact original render', (await canvasUrl()) === original);
+  await page.getByRole('tab', { name: 'Style', exact: true }).click();
   check('photo: removing the photo restores the original error correction', (await page.getByRole('radiogroup', { name: 'Error correction' }).locator('[aria-checked="true"]').innerText()) === originalEcc);
 
-  // Reload with a photo-based entry, then restore it without the photo.
+  await openPhotoTab();
+  // Reload, restore the photo entry: the photo comes back from IndexedDB.
   const errorsBefore = consoleErrors.length;
   await page.reload({ waitUntil: 'networkidle' });
   await page.locator('.recent__card[data-type="url"]').first().click();
-  await settle(600);
-  check('photo: reload with a photo-based entry does not crash', consoleErrors.length === errorsBefore && (await decodeCanvas())?.text === PHOTO_URL);
-  check('photo: restoring it explains the photo was not saved', (await page.locator('.photo-style__note').innerText()).includes('restored without one'));
+  await settle(800);
+  await openPhotoTab();
+  check('photo: restored after reload from IndexedDB', (await page.getByRole('img', { name: 'Selected photo' }).count()) === 1 && (await decodeStatus()) === 'pass');
+  check('photo: restored code decodes', (await decodeCanvas())?.text === PHOTO_URL && consoleErrors.length === errorsBefore);
 
-  // A dark photo at full strength fails; Boost readability fixes it.
+  // With the stored blob gone, the entry restores without it and says so.
+  await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const open = indexedDB.open('qr-studio');
+        open.onsuccess = () => {
+          const tx = open.result.transaction('images', 'readwrite');
+          tx.objectStore('images').clear();
+          tx.oncomplete = () => {
+            open.result.close();
+            resolve(true);
+          };
+        };
+        open.onerror = () => resolve(false);
+      }),
+  );
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.locator('.recent__card[data-type="url"]').first().click();
+  await settle(800);
+  await openPhotoTab();
+  check('photo: missing stored photo restores without it', (await page.getByRole('img', { name: 'Selected photo' }).count()) === 0 && (await decodeCanvas())?.text === PHOTO_URL);
+  check('photo: missing stored photo is explained', (await page.locator('.photo-style__note').first().innerText()).includes('no longer stored on this device'));
+  check('photo: missing stored photo causes no console errors', consoleErrors.length === errorsBefore);
+
+  // Decode matrix: 3 synthetic photos x 5 payload types, read by jsQR and ZBar.
+  const TYPES = [
+    ['URL', [['Website URL', 'gdg.dev/srm']], 'https://gdg.dev/srm'],
+    ['Text', [['Text', 'Hello GDG']], 'Hello GDG'],
+    ['Email', [['Recipient', 'a@gdg.dev']], 'mailto:a@gdg.dev'],
+    ['Phone', [['Phone number', '+919876543210']], 'tel:+919876543210'],
+    ['Wi-Fi', [['Network name (SSID)', 'GDG'], ['Password', 'buildwithgdg']], 'WIFI:T:WPA;S:GDG;P:buildwithgdg;;'],
+  ];
+  for (const size of ['640', '320']) {
+    await page.getByRole('tab', { name: 'Style', exact: true }).click();
+    await page.getByLabel('Size', { exact: true }).fill(size);
+    const gate = size === '640';
+    for (const [name, file] of Object.entries(photos)) {
+      await openPhotoTab();
+      if (await page.getByRole('button', { name: 'Remove', exact: true }).count()) await removePhoto();
+      await choosePhoto(file);
+      await page.getByLabel('Dot size').fill('42');
+      const row = [];
+      for (const [type, fields, expected] of TYPES) {
+        await typeRadio(type).click();
+        for (const [label, value] of fields) await page.getByLabel(label, { exact: true }).fill(value);
+        const inApp = await decodeStatus();
+        const [j, z] = await decodeBoth();
+        let cell = `${j === expected ? 'J' : '-'}${z === expected ? 'Z' : '-'}`;
+        if (gate) {
+          check(`photo matrix ${size}px: ${name} × ${type} decodes with jsQR`, j === expected && inApp === 'pass');
+          if (z !== expected) {
+            // ZBar is stricter about tiny dots: raising Dot size is the documented fix.
+            await page.getByLabel('Dot size').fill('55');
+            await decodeStatus();
+            const [, z2] = await decodeBoth();
+            cell += z2 === expected ? '(Z@55)' : '(-@55)';
+            check(`photo matrix ${size}px: ${name} × ${type} decodes with ZBar after raising Dot size to 55`, z2 === expected);
+            await page.getByLabel('Dot size').fill('42');
+          } else check(`photo matrix ${size}px: ${name} × ${type} decodes with ZBar`, true);
+        }
+        row.push(`${type}:${cell}`);
+      }
+      results.push(`INFO  decode ${size}px ${name.padEnd(9)} ${row.join('  ')}`);
+    }
+  }
+  await page.getByRole('tab', { name: 'Style', exact: true }).click();
+  await page.getByLabel('Size', { exact: true }).fill('320');
+
+  // A hard checkerboard photo fails at default settings; Boost readability fixes it.
   const LONG_URL = 'https://gdg.community.dev/gdg-on-campus-srm';
+  await typeRadio('URL').click();
   await page.getByLabel('Website URL').fill(LONG_URL);
-  await choosePhoto(/Add a photo style/, dark);
-  await page.getByRole('radio', { name: 'Photo underlay' }).click();
-  await page.getByLabel('Photo strength').fill('100');
-  await page.getByLabel('Contrast', { exact: true }).fill('0');
-  await settle(300);
-  check('photo: a heavy dark underlay is reported as failing', (await decodeStatus()) === 'fail' && (await page.locator('.stage__verdict').getAttribute('data-status')) === 'bad');
+  await openPhotoTab();
+  await choosePhoto(busy);
+  check('photo: a busy photo is reported as failing', (await decodeStatus()) === 'fail' && (await page.locator('.stage__verdict').getAttribute('data-status')) === 'bad');
   await page.getByRole('button', { name: 'Boost readability', exact: true }).click();
-  await settle(2500);
+  await settle(3000);
   check('photo: Boost readability makes it decode', (await decodeStatus()) === 'pass' && (await decodeCanvas())?.text === LONG_URL);
+  await removePhoto();
+  await settle(400);
 });
 
 // ----------------------------------------------------------------- theme --
@@ -543,6 +660,7 @@ await browser.close();
 if (server) await new Promise((resolve) => server.httpServer.close(resolve));
 fs.rmSync(tmp, { recursive: true, force: true });
 
+const counted = results.filter((r) => !r.startsWith('INFO'));
 console.log(results.join('\n'));
-console.log(`\n${results.length - failures}/${results.length} checks passed against ${base}`);
+console.log(`\n${counted.length - failures}/${counted.length} checks passed against ${base}`);
 process.exit(failures ? 1 : 0);
