@@ -26,12 +26,16 @@ interface ScanCheckProps {
   style: QrStyle;
   warnings: ScanWarning[];
   active: boolean;
+  /** Photo styles only: result of decoding the rendered canvas in this browser. */
+  decode?: 'pending' | 'pass' | 'fail' | null;
+  onBoost?: () => void;
+  boosting?: boolean;
 }
 
 /** The advisor: real measurements first, then guidance ranked by severity. */
-export function ScanCheck({ style, warnings, active }: ScanCheckProps) {
+export function ScanCheck({ style, warnings, active, decode = null, onBoost, boosting = false }: ScanCheckProps) {
   const ranked = [...warnings].sort((a, b) => (a.level === b.level ? 0 : a.level === 'warning' ? -1 : 1));
-  const clear = active && warnings.length === 0;
+  const clear = active && warnings.length === 0 && decode !== 'fail' && decode !== 'pending';
 
   return (
     <section className="scan-check" id="scan-check" aria-labelledby="scan-check-title" tabIndex={-1}>
@@ -49,6 +53,30 @@ export function ScanCheck({ style, warnings, active }: ScanCheckProps) {
       </dl>
 
       <div aria-live="polite">
+        {active && decode ? (
+          <div className="decode" data-status={decode}>
+            <Icon name={decode === 'pass' ? 'check-circle' : decode === 'fail' ? 'alert' : 'scan'} size={18} />
+            <span>
+              {decode === 'pass' ? (
+                <>
+                  <strong>Test scan passed.</strong> This browser decoded the photo style back to your exact content.
+                </>
+              ) : decode === 'fail' ? (
+                <>
+                  <strong>Test scan failed.</strong> The photo hides too much for a reliable read.
+                </>
+              ) : (
+                <>Test-scanning the photo style…</>
+              )}
+            </span>
+            {decode === 'fail' && onBoost ? (
+              <button type="button" className="button button--primary button--sm decode__boost" onClick={onBoost} disabled={boosting}>
+                <Icon name="sparkle" size={16} />
+                {boosting ? 'Boosting…' : 'Boost readability'}
+              </button>
+            ) : null}
+          </div>
+        ) : null}
         <AnimatePresence initial={false} mode="popLayout">
           {clear ? (
             <m.p key="clear" className="scan-check__clear" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>

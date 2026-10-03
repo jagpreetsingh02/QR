@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { HistoryEntry, QrContent, QrStyle, QrType } from '../types';
+import type { HistoryEntry, PhotoStyle, QrContent, QrStyle, QrType } from '../types';
 import type { Theme } from '../hooks/useTheme';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { useHistory } from '../hooks/useHistory';
@@ -8,7 +8,9 @@ import { buildFilename, downloadFile } from '../lib/download';
 import { DEFAULT_STYLE } from '../lib/presets';
 import type { Preset } from '../lib/presets';
 import { createEmptyDrafts, describeContent, encodeContent } from '../lib/qrContent';
-import { renderToPngDataUrl, renderToSvg } from '../lib/render';
+import { renderToCanvas, renderToPngDataUrl, renderToSvg } from '../lib/render';
+import { decodeCanvas } from '../lib/decode';
+import { effectiveStyle } from '../lib/photo';
 import { getScanWarnings } from '../lib/scanAdvice';
 import { hasErrors, validateContent } from '../lib/validation';
 import { ContentForm } from '../components/ContentForm';
@@ -56,6 +58,8 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
   // Errors appear once a type's fields have been touched, not on first load.
   const [touched, setTouched] = useState<Partial<Record<QrType, boolean>>>({});
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [photoNote, setPhotoNote] = useState<string | null>(null);
+  const [boosting, setBoosting] = useState(false);
   const toastId = useRef(0);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -74,8 +78,10 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
   const isValid = !hasErrors(errors);
   const encoded = useMemo(() => (isValid ? encodeContent(content) : ''), [content, isValid]);
 
-  const { canvasRef, error: renderError, isRendered } = useQrCanvas(encoded, style, isValid);
-  const warnings = useMemo(() => (isValid && !renderError ? getScanWarnings(style, encoded) : []), [isValid, renderError, style, encoded]);
+  // What is actually rendered: a photo style raises error correction to at least Q.
+  const renderStyle = useMemo(() => effectiveStyle(style), [style]);
+  const { canvasRef, error: renderError, isRendered, decode } = useQrCanvas(encoded, renderStyle, isValid);
+  const warnings = useMemo(() => (isValid && !renderError ? getScanWarnings(renderStyle, encoded) : []), [isValid, renderError, renderStyle, encoded]);
 
   const notify = useCallback((tone: ToastMessage['tone'], message: string, action?: ToastMessage['action']) => {
     toastId.current += 1;
@@ -95,6 +101,37 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
     setStyle((current) => ({ ...current, foreground: preset.foreground, background: preset.background, margin: preset.margin }));
   }, []);
 
+  const updatePhoto = useCallback((photo: PhotoStyle | null) => {
+    if (photo) setPhotoNote(null);
+    setStyle((current) => ({ ...current, photo }));
+  }, []);
+
+  /**
+   * Raises contrast and lowers photo strength step by step, test-scanning an
+   * off-screen render each time, and applies the first setting that decodes.
+   */
+  const boostReadability = useCallback(async () => {
+    if (!style.photo || !encoded) return;
+    setBoosting(true);
+    const probe = document.createElement('canvas');
+    let candidate: QrStyle = style;
+    let decoded = false;
+    for (let step = 0; step < 10 && !decoded; step += 1) {
+      const photo = candidate.photo!;
+      candidate = { ...candidate, photo: { ...photo, contrast: Math.min(100, photo.contrast + 15), strength: Math.max(0, photo.strength - 12) } };
+      await renderToCanvas(probe, encoded, effectiveStyle(candidate));
+      decoded = (await decodeCanvas(probe)) === encoded;
+    }
+    setBoosting(false);
+    const previous = style;
+    setStyle(candidate);
+    if (decoded) {
+      notify('success', `Readable now: strength ${candidate.photo!.strength}%, contrast ${candidate.photo!.contrast}%.`, { label: 'Undo', run: () => setStyle(previous) });
+    } else {
+      notify('error', 'Still not decoding. Try Photo underlay, a calmer photo, or remove the photo.');
+    }
+  }, [style, encoded, notify]);
+
   const resetDesign = useCallback(() => {
     const previous = style;
     setStyle(DEFAULT_STYLE);
@@ -109,7 +146,13 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
       setTouched((current) => ({ ...current, [entry.content.type]: true }));
       setActiveId(entry.id);
       setPanel('content');
-      notify('success', `Restored “${entry.label || 'code'}” with its design.`);
+      if (entry.photoOmitted) {
+        setPhotoNote('This code used a photo style. Photos are never saved, so it was restored without one. Add the photo again to reapply it.');
+        notify('info', `Restored “${entry.label || 'code'}” without its photo (photos are never saved).`);
+      } else {
+        setPhotoNote(null);
+        notify('success', `Restored “${entry.label || 'code'}” with its design.`);
+      }
     },
     [notify],
   );
@@ -139,7 +182,15 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
     renderToPngDataUrl(settled.encoded, { ...settled.style, size: THUMBNAIL_SIZE })
       .then((thumbnail) => {
         if (cancelled) return;
-        remember({ encoded: settled.encoded, label: describeContent(settled.content), content: settled.content, style: settled.style, thumbnail });
+        // Only the small thumbnail keeps the photo look; the photo itself is never stored.
+        remember({
+          encoded: settled.encoded,
+          label: describeContent(settled.content),
+          content: settled.content,
+          style: { ...settled.style, photo: null },
+          thumbnail,
+          photoOmitted: Boolean(settled.style.photo),
+        });
       })
       .catch(() => {
         /* A payload that cannot render is already explained on the stage. */
@@ -172,7 +223,7 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
 
   const downloadSvg = useCallback(async () => {
     try {
-      const markup = await renderToSvg(encoded, style);
+      const markup = await renderToSvg(encoded, renderStyle);
       const filename = buildFilename(type, describeContent(content), 'svg');
       downloadFile(new Blob([markup], { type: 'image/svg+xml;charset=utf-8' }), filename);
       notify('success', `Saved ${filename}`);
@@ -181,7 +232,7 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
       notify('error', cause instanceof Error ? cause.message : 'The SVG could not be created.');
       return false;
     }
-  }, [content, encoded, style, type, notify]);
+  }, [content, encoded, renderStyle, type, notify]);
 
   /**
    * Copies the preview as a PNG. The blob is passed as a promise so Safari keeps
@@ -231,7 +282,7 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
   const shownErrors = touched[type] ? errors : {};
   const firstError = Object.values(shownErrors)[0] ?? null;
   const canDownload = isRendered && !renderError;
-  const verdict = canDownload ? getVerdict(style, warnings) : null;
+  const verdict = canDownload ? getVerdict(renderStyle, warnings, decode) : null;
   const showScanCheck = useCallback(() => {
     const target = document.getElementById('scan-check');
     target?.scrollIntoView({ block: 'start' });
@@ -288,11 +339,11 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
 
           <div className="studio-center">
             <div className="studio-stage-col">
-              <Stage canvasRef={canvasRef} style={style} content={content} encoded={encoded} isRendered={isRendered} renderError={renderError} formMessage={firstError} verdict={verdict} onVerdict={showScanCheck} />
+              <Stage canvasRef={canvasRef} style={renderStyle} content={content} encoded={encoded} isRendered={isRendered} renderError={renderError} formMessage={firstError} verdict={verdict} onVerdict={showScanCheck} />
               <div className="studio-export">
                 <ExportBar disabled={!canDownload} onPng={downloadPng} onSvg={downloadSvg} onCopy={copyImage} />
               </div>
-              <ScanCheck style={style} warnings={warnings} active={canDownload} />
+              <ScanCheck style={renderStyle} warnings={warnings} active={canDownload} decode={decode} onBoost={boostReadability} boosting={boosting} />
             </div>
             <div className="studio-recent" data-panel-id="recent">
               <RecentCodes entries={entries} activeId={activeId} onRestore={restoreEntry} onRemove={removeEntry} onClear={clearHistory} />
@@ -300,7 +351,7 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
           </div>
 
           <div className="studio-design" data-panel-id="design">
-            <DesignPanel style={style} previewText={encoded || PREVIEW_FALLBACK} onChange={updateStyle} onPreset={applyPreset} onReset={resetDesign} />
+            <DesignPanel style={style} previewText={encoded || PREVIEW_FALLBACK} onChange={updateStyle} onPreset={applyPreset} onReset={resetDesign} photoNote={photoNote} onPhoto={updatePhoto} />
           </div>
         </main>
 

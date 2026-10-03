@@ -31,6 +31,7 @@ export const DEFAULT_STYLE: QrStyle = {
   margin: PRESETS[0].margin,
   logo: null,
   logoScale: 20,
+  photo: null,
 };
 
 /** Returns the preset whose appearance the style currently matches, if any. */

@@ -42,6 +42,8 @@ function parseStyle(raw: unknown): QrStyle {
     margin: typeof raw.margin === 'number' ? clamp(Math.round(raw.margin), 0, 10) : DEFAULT_STYLE.margin,
     logo: typeof raw.logo === 'string' && raw.logo.startsWith('data:image/') ? raw.logo : null,
     logoScale: typeof raw.logoScale === 'number' ? clamp(Math.round(raw.logoScale), 10, 35) : DEFAULT_STYLE.logoScale,
+    // Photos are never persisted; a stored entry always restores without one.
+    photo: null,
   };
 }
 
@@ -64,6 +66,7 @@ function parseEntry(raw: unknown): HistoryEntry | null {
     content: content as HistoryEntry['content'],
     style: parseStyle(raw.style),
     thumbnail: typeof thumbnail === 'string' ? thumbnail : '',
+    photoOmitted: raw.photoOmitted === true,
   };
 }
 

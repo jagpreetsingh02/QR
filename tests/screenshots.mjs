@@ -3,6 +3,11 @@
  *   npx vite preview --port 4180 &  node tests/screenshots.mjs [baseUrl]
  */
 import { chromium } from 'playwright';
+import os from 'node:os';
+import path from 'node:path';
+import { writeTestPhoto } from './fixtures.mjs';
+
+const testPhoto = writeTestPhoto(path.join(os.tmpdir(), 'qr-studio-photo.png'));
 
 const base = (process.argv[2] ?? 'http://localhost:4180').replace(/\/$/, '');
 const browser = await chromium.launch();
@@ -26,6 +31,8 @@ const shots = [
   { file: 'tablet.png', route: '/studio', viewport: { width: 834, height: 1112 }, theme: 'light', studio: true },
   { file: 'mobile.png', route: '/studio', viewport: { width: 390, height: 844 }, theme: 'light', studio: true },
   { file: 'landing-mobile.png', route: '/', viewport: { width: 390, height: 844 }, theme: 'dark' },
+  { file: 'photo-tint.png', route: '/studio', viewport: { width: 1440, height: 900 }, theme: 'light', photo: 'Tinted modules' },
+  { file: 'photo-underlay.png', route: '/studio', viewport: { width: 1440, height: 900 }, theme: 'dark', photo: 'Photo underlay' },
 ];
 
 for (const s of shots) {
@@ -34,6 +41,18 @@ for (const s of shots) {
   const page = await context.newPage();
   await page.goto(base + s.route, { waitUntil: 'networkidle' });
   if (s.studio) await fillStudio(page, s.viewport.width >= 768);
+  if (s.photo) {
+    await page.getByLabel('Website URL').fill('gdg.community.dev/gdg-on-campus-srm');
+    const chooser = page.waitForEvent('filechooser');
+    await page.getByRole('button', { name: /Add a photo style/ }).click();
+    await (await chooser).setFiles(testPhoto);
+    await page.getByRole('radio', { name: s.photo }).click();
+    if (s.photo === 'Photo underlay') await page.getByLabel('Photo strength').fill('85');
+    await page.waitForTimeout(1500);
+    // Show the photo controls in the design column.
+    await page.locator('.photo-style').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(300);
+  }
   if (s.full) {
     const height = await page.evaluate(() => document.body.scrollHeight);
     for (let y = 0; y < height; y += 600) {

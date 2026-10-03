@@ -1,4 +1,4 @@
-import type { EccLevel, QrStyle } from '../types';
+import type { EccLevel, PhotoStyle as Photo, QrStyle } from '../types';
 import { contrastRatio } from '../lib/colour';
 import { MIN_SAFE_CONTRAST } from '../lib/scanAdvice';
 import { PRESETS, matchPreset } from '../lib/presets';
@@ -8,6 +8,8 @@ import { SegmentedField, SliderField } from '../components/fields';
 import { Icon } from '../components/Icon';
 import { QrSvg } from '../components/QrSvg';
 import { LogoDrop } from './LogoDrop';
+import { PhotoStyle } from './PhotoStyle';
+import { atLeastQ } from '../lib/photo';
 
 const ECC_OPTIONS: ReadonlyArray<{ value: EccLevel; label: string; detail: string; title: string }> = [
   { value: 'L', label: 'L', detail: '7%', title: 'Low: recovers about 7% of the code' },
@@ -23,9 +25,12 @@ interface DesignPanelProps {
   onChange: (patch: Partial<QrStyle>) => void;
   onPreset: (preset: Preset) => void;
   onReset: () => void;
+  /** Note shown after restoring a recent code that had a photo. */
+  photoNote: string | null;
+  onPhoto: (photo: Photo | null) => void;
 }
 
-export function DesignPanel({ style, previewText, onChange, onPreset, onReset }: DesignPanelProps) {
+export function DesignPanel({ style, previewText, onChange, onPreset, onReset, photoNote, onPhoto }: DesignPanelProps) {
   const active = matchPreset(style);
   const ratio = contrastRatio(style.foreground, style.background);
   const ratioStatus = ratio >= MIN_SAFE_CONTRAST ? 'ok' : ratio >= 3 ? 'warn' : 'bad';
@@ -92,12 +97,23 @@ export function DesignPanel({ style, previewText, onChange, onPreset, onReset }:
       <div className="panel-group">
         <SliderField label="Size" value={style.size} min={128} max={1024} step={16} unit=" px" hint="Used by the preview and every download." onChange={(size) => onChange({ size })} />
         <SliderField label="Quiet zone" value={style.margin} min={0} max={10} unit=" modules" hint="The blank border scanners look for. The QR spec asks for 4." onChange={(margin) => onChange({ margin })} />
-        <SegmentedField label="Error correction" value={style.ecc} options={ECC_OPTIONS} hint="How much of the code can be damaged or covered and still scan." onChange={(ecc) => onChange({ ecc })} />
+        <SegmentedField
+          label="Error correction"
+          value={style.photo ? atLeastQ(style.ecc) : style.ecc}
+          options={style.photo ? ECC_OPTIONS.map((o) => ({ ...o, disabled: o.value === 'L' || o.value === 'M' })) : ECC_OPTIONS}
+          hint={style.photo ? 'A photo style needs at least Q, so L and M are off while a photo is set.' : 'How much of the code can be damaged or covered and still scan.'}
+          onChange={(ecc) => onChange({ ecc })}
+        />
       </div>
 
       <div className="panel-group">
         <span className="field__label">Logo</span>
         <LogoDrop logo={style.logo} logoScale={style.logoScale} onLogoChange={(logo) => onChange({ logo })} onScaleChange={(logoScale) => onChange({ logoScale })} />
+      </div>
+
+      <div className="panel-group">
+        <span className="field__label">Photo style</span>
+        <PhotoStyle photo={style.photo} note={photoNote} onChange={onPhoto} />
       </div>
     </section>
   );

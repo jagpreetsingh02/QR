@@ -218,27 +218,26 @@ export function SegmentedField<T extends string>({
 }: {
   label: string;
   value: T;
-  options: ReadonlyArray<{ value: T; label: string; detail?: string; title?: string }>;
+  options: ReadonlyArray<{ value: T; label: string; detail?: string; title?: string; disabled?: boolean }>;
   onChange: (value: T) => void;
   hint?: string;
 }) {
   const id = useId();
-  const { onKeyDown, itemProps } = useRovingRadio(
-    options.map((o) => o.value),
-    value,
-    onChange,
-  );
+  // Disabled options are skipped by the arrow keys and are not tab stops.
+  const enabled = options.filter((o) => !o.disabled).map((o) => o.value);
+  const { onKeyDown, itemProps } = useRovingRadio(enabled, value, onChange);
   return (
     <div className="field">
       <span className="field__label" id={`${id}-legend`}>
         {label}
       </span>
       <div className="segmented" role="radiogroup" aria-labelledby={`${id}-legend`} onKeyDown={onKeyDown}>
-        {options.map((option, i) => (
+        {options.map((option) => (
           <button
             key={option.value}
             type="button"
-            {...itemProps(i)}
+            {...(option.disabled ? { role: 'radio' as const, 'aria-checked': false, tabIndex: -1 } : itemProps(enabled.indexOf(option.value)))}
+            disabled={option.disabled}
             title={option.title}
             className="segmented__option"
             onClick={() => onChange(option.value)}

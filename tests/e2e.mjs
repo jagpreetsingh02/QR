@@ -14,6 +14,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
+import { writePng, writeTestPhoto, writeOversizePhoto } from './fixtures.mjs';
 
 // ---------------------------------------------------------------- harness --
 const results = [];
@@ -389,6 +390,113 @@ await section('history', async () => {
   await page.getByRole('button', { name: 'Undo' }).click();
   await settle(500);
   check('clear all can be undone', (await page.locator('.recent__card').count()) === before);
+});
+
+// ---------------------------------------------------------- photo style --
+await section('photo style', async () => {
+  const PHOTO_URL = 'https://gdgsrm.dev/photo';
+  const photo = writeTestPhoto(path.join(tmp, 'photo.png'));
+  const dark = writePng(path.join(tmp, 'dark.png'), 640, 480, (x, y) => [18 + ((x + y) % 14), 20, 34 + (y % 10)]);
+  const oversize = writeOversizePhoto(path.join(tmp, 'big.png'));
+
+  const choosePhoto = async (buttonName, files) => {
+    const chooser = page.waitForEvent('filechooser');
+    await page.getByRole('button', { name: buttonName }).click();
+    await (await chooser).setFiles(files);
+  };
+  const decodeStatus = async () => {
+    for (let i = 0; i < 50; i += 1) {
+      const status = await page.locator('.decode').getAttribute('data-status').catch(() => null);
+      if (status === 'pass' || status === 'fail') return status;
+      await settle(150);
+    }
+    return 'timeout';
+  };
+  const canvasUrl = () => page.evaluate(() => document.querySelector('.stage__canvas').toDataURL('image/png'));
+
+  await page.goto(`${base}/studio`, { waitUntil: 'networkidle' });
+  await page.getByLabel('Website URL').fill(PHOTO_URL);
+  await settle(500);
+  const original = await canvasUrl();
+  const originalEcc = await page.getByRole('radiogroup', { name: 'Error correction' }).locator('[aria-checked="true"]').innerText();
+
+  // Validation: wrong type and oversize files are refused with a clear message.
+  await choosePhoto(/Add a photo style/, { name: 'anim.gif', mimeType: 'image/gif', buffer: Buffer.from('GIF89a') });
+  await settle(300);
+  check('photo: wrong file type is refused', (await page.locator('.photo-style .field__message.is-error').innerText()).includes('PNG, JPG or WebP'));
+  await choosePhoto(/Add a photo style/, oversize);
+  await settle(500);
+  check('photo: oversize file is refused', (await page.locator('.photo-style .field__message.is-error').innerText()).includes('under 2 MB'));
+
+  // Tinted modules.
+  await choosePhoto(/Add a photo style/, photo);
+  check('photo: tinted modules pass the in-app test scan', (await decodeStatus()) === 'pass');
+  check('photo: tinted modules decode to the original payload', (await decodeCanvas())?.text === PHOTO_URL);
+  check('photo: error correction raised to at least Q', /^Q/.test(await eccRadio('Q').innerText()) && (await eccRadio('Q').getAttribute('aria-checked')) === 'true' && (await eccRadio('M').isDisabled()));
+  check('photo: the canvas really changed', (await canvasUrl()) !== original);
+
+  // PNG download is the preview canvas, pixel for pixel.
+  const png = await download('Download PNG');
+  const pngBytes = fs.readFileSync(await png.path());
+  const same = await page.evaluate(async (b64) => {
+    const img = new Image();
+    img.src = `data:image/png;base64,${b64}`;
+    await img.decode();
+    const c = document.querySelector('.stage__canvas');
+    const probe = document.createElement('canvas');
+    probe.width = img.width;
+    probe.height = img.height;
+    const ctx = probe.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const a = ctx.getImageData(0, 0, img.width, img.height).data;
+    const b = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i += 1) if (a[i] !== b[i]) return false;
+    return true;
+  }, pngBytes.toString('base64'));
+  check('photo: PNG download matches the preview pixel for pixel', same);
+  check('photo: downloaded PNG decodes', (await decodePng(pngBytes)) === PHOTO_URL);
+
+  const svg = fs.readFileSync(await (await download('Download SVG')).path(), 'utf8');
+  check('photo: SVG embeds the processed photo as a data URI', svg.includes('<image') && svg.includes('href="data:image/jpeg;base64,'));
+  check('photo: SVG keeps solid finder patterns as rects', (svg.match(/<rect /g) ?? []).length > 100);
+
+  // Photo underlay.
+  await page.getByRole('radio', { name: 'Photo underlay' }).click();
+  check('photo: underlay passes the in-app test scan', (await decodeStatus()) === 'pass');
+  check('photo: underlay decodes to the original payload', (await decodeCanvas())?.text === PHOTO_URL);
+
+  // History stores a thumbnail and a flag, never the photo.
+  await settle(1300);
+  const stored = await page.evaluate(() => localStorage.getItem('qr-studio:history:v1') ?? '');
+  check('photo: recent codes never store the photo', !stored.includes('image/jpeg') && stored.includes('"photoOmitted":true'));
+
+  // Remove restores the exact original render (and the original ECC).
+  await page.getByRole('button', { name: 'Remove', exact: true }).click();
+  await settle(600);
+  check('photo: removing the photo restores the exact original render', (await canvasUrl()) === original);
+  check('photo: removing the photo restores the original error correction', (await page.getByRole('radiogroup', { name: 'Error correction' }).locator('[aria-checked="true"]').innerText()) === originalEcc);
+
+  // Reload with a photo-based entry, then restore it without the photo.
+  const errorsBefore = consoleErrors.length;
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.locator('.recent__card[data-type="url"]').first().click();
+  await settle(600);
+  check('photo: reload with a photo-based entry does not crash', consoleErrors.length === errorsBefore && (await decodeCanvas())?.text === PHOTO_URL);
+  check('photo: restoring it explains the photo was not saved', (await page.locator('.photo-style__note').innerText()).includes('restored without one'));
+
+  // A dark photo at full strength fails; Boost readability fixes it.
+  const LONG_URL = 'https://gdg.community.dev/gdg-on-campus-srm';
+  await page.getByLabel('Website URL').fill(LONG_URL);
+  await choosePhoto(/Add a photo style/, dark);
+  await page.getByRole('radio', { name: 'Photo underlay' }).click();
+  await page.getByLabel('Photo strength').fill('100');
+  await page.getByLabel('Contrast', { exact: true }).fill('0');
+  await settle(300);
+  check('photo: a heavy dark underlay is reported as failing', (await decodeStatus()) === 'fail' && (await page.locator('.stage__verdict').getAttribute('data-status')) === 'bad');
+  await page.getByRole('button', { name: 'Boost readability', exact: true }).click();
+  await settle(2500);
+  check('photo: Boost readability makes it decode', (await decodeStatus()) === 'pass' && (await decodeCanvas())?.text === LONG_URL);
 });
 
 // ----------------------------------------------------------------- theme --

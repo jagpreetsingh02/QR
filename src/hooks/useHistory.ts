@@ -8,6 +8,7 @@ export interface HistoryDraft {
   content: QrContent;
   style: QrStyle;
   thumbnail: string;
+  photoOmitted?: boolean;
 }
 
 function createId(): string {

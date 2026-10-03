@@ -29,6 +29,23 @@ export type ContentOf<T extends QrType> = Extract<QrContent, { type: T }>;
 /** One draft per type, so switching types never loses what was typed. */
 export type ContentDrafts = { [T in QrType]: ContentOf<T> };
 
+/** How a photo is combined with the code. */
+export type PhotoMode = 'tint' | 'underlay';
+
+/**
+ * Optional photo style. The image only ever lives in memory: it is never put
+ * in the URL or saved to recent codes (only the rendered thumbnail is).
+ */
+export interface PhotoStyle {
+  /** Downscaled photo as a data URL. */
+  src: string;
+  mode: PhotoMode;
+  /** How much of the photo shows through, 0–100. */
+  strength: number;
+  /** How strongly dark modules are separated from light ones, 0–100. */
+  contrast: number;
+}
+
 /** Visual + encoding settings applied to the rendered QR code. */
 export interface QrStyle {
   /** Output edge length in pixels (square). */
@@ -45,6 +62,8 @@ export interface QrStyle {
   logo: string | null;
   /** Logo width as a percentage of the QR edge. */
   logoScale: number;
+  /** Optional photo style; `null` renders the plain code. */
+  photo: PhotoStyle | null;
 }
 
 /** Severity used by the scan-reliability advisor. */
@@ -69,4 +88,6 @@ export interface HistoryEntry {
   style: QrStyle;
   /** Small PNG data URL used for the history thumbnail. */
   thumbnail: string;
+  /** True when the code used a photo style; the photo itself is never stored. */
+  photoOmitted?: boolean;
 }

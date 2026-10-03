@@ -30,11 +30,14 @@ export interface Verdict {
 }
 
 /** One-line summary of the scan check, for places with no room for the panel. */
-export function getVerdict(style: QrStyle, warnings: ScanWarning[]): Verdict {
+export function getVerdict(style: QrStyle, warnings: ScanWarning[], decode: 'pending' | 'pass' | 'fail' | null = null): Verdict {
+  if (decode === 'fail') return { status: 'bad', title: 'Didn’t decode', detail: 'try Boost readability' };
+  if (decode === 'pending') return { status: 'warn', title: 'Test-scanning…', detail: 'photo style' };
   const readings = getReadings(style);
   const worst = readings.find((r) => r.status === 'bad') ?? readings.find((r) => r.status === 'warn');
   const hasWarning = warnings.some((w) => w.level === 'warning');
   if (worst?.status === 'bad') return { status: 'bad', title: 'Likely won’t scan', detail: `${worst.label} ${worst.value}` };
   if (worst || hasWarning) return { status: 'warn', title: 'Check before printing', detail: worst ? `${worst.label} ${worst.value}` : `${warnings.length} note${warnings.length === 1 ? '' : 's'}` };
+  if (decode === 'pass') return { status: 'ok', title: 'Decodes', detail: 'test scan passed' };
   return { status: 'ok', title: 'No scan risks', detail: `${readings[0].value} contrast` };
 }
