@@ -302,6 +302,19 @@ await section('downloads', async () => {
   check('SVG downloaded at the preview size', svgText.startsWith('<svg') && svgText.includes('width="512"'));
   check('SVG uses the preview colours', svgText.includes('#111827') && svgText.includes('#ffffff'));
 
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base });
+  await page.getByRole('button', { name: 'Copy image' }).click();
+  await settle(500);
+  const clip = await page.evaluate(async () => {
+    const items = await navigator.clipboard.read();
+    const item = items.find((i) => i.types.includes('image/png'));
+    if (!item) return null;
+    const blob = await item.getType('image/png');
+    const bmp = await createImageBitmap(blob);
+    return [bmp.width, bmp.height];
+  });
+  check('Copy image puts the PNG on the clipboard', clip?.[0] === 512 && clip?.[1] === 512, JSON.stringify(clip));
+
   const viaKeyboard = page.waitForEvent('download', { timeout: 10000 });
   await page.keyboard.press('Control+Enter');
   check('Ctrl+Enter downloads the PNG', /\.png$/.test((await viaKeyboard).suggestedFilename()));

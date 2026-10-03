@@ -166,6 +166,32 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
     }
   }, [content, encoded, style, type, notify]);
 
+  /**
+   * Copies the preview as a PNG. The blob is passed as a promise so Safari keeps
+   * the user gesture; browsers without image clipboard support get the encoded
+   * text instead, and say so.
+   */
+  const copyImage = useCallback(async () => {
+    const canvas = canvasRef.current;
+    if (!canvas || !isRendered) return false;
+    try {
+      if (typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) throw new Error('unsupported');
+      const blob = new Promise<Blob>((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('encode'))), 'image/png'));
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      notify('success', 'Image copied. Paste it into your poster or chat.');
+      return true;
+    } catch {
+      try {
+        await navigator.clipboard.writeText(encoded);
+        notify('info', 'This browser cannot copy images, so the encoded text was copied instead.');
+        return true;
+      } catch {
+        notify('error', 'Copying is blocked here. Use Download PNG instead.');
+        return false;
+      }
+    }
+  }, [canvasRef, isRendered, encoded, notify]);
+
   // --- Keyboard shortcut: Cmd/Ctrl + Enter downloads the PNG -----------------
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -229,7 +255,7 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
             <div className="studio-stage-col">
               <Stage canvasRef={canvasRef} style={style} content={content} encoded={encoded} isRendered={isRendered} renderError={renderError} formMessage={firstError} />
               <div className="studio-export">
-                <ExportBar disabled={!canDownload} onPng={downloadPng} onSvg={downloadSvg} />
+                <ExportBar disabled={!canDownload} onPng={downloadPng} onSvg={downloadSvg} onCopy={copyImage} />
               </div>
               <ScanCheck style={style} warnings={warnings} active={canDownload} />
             </div>
