@@ -96,8 +96,11 @@ than taste. The full record is in [docs/design-brief.md](docs/design-brief.md).
    Tokens live in [`design/tokens.mjs`](design/tokens.mjs); `npm run tokens` writes
    `src/styles/tokens.css`, and the scripts in `design/` generated the Figma variables, components
    and screens from the same source, so `color/bg` in Figma is `--color-bg` in CSS.
-5. **Build, then audit:** Lighthouse, a measured contrast pass, the detector, and a second
-   two-reviewer critique of the finished pages drove the fixes listed in the commit history.
+5. **Build, then audit:** Lighthouse, a measured contrast pass (806 rendered text elements, both
+   themes), the detector, and a second two-reviewer critique of the finished pages (studio 29/40,
+   up from 24) drove the fixes listed in the commit history.
+6. **Documented:** [DESIGN.md](DESIGN.md) records the built system (tokens, type, components,
+   layout, motion and named rules) for whoever works on it next.
 
 ## Quality
 

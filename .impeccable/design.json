@@ -1,0 +1,534 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-03T13:40:20.271Z",
+  "title": "Design System: QR Studio",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Campus Blue",
+        "canonical": "#1967D2",
+        "darkValue": "#8AB4F8",
+        "cssVar": "--color-primary",
+        "tonalRamp": [
+          "#1A2A4A",
+          "#185ABC",
+          "#1967D2",
+          "#1A73E8",
+          "#4285F4",
+          "#8AB4F8",
+          "#AECBFA",
+          "#E8F0FE"
+        ]
+      },
+      "primary-soft": {
+        "role": "primary",
+        "displayName": "Blue Wash",
+        "canonical": "#E8F0FE",
+        "darkValue": "#1A2A4A",
+        "cssVar": "--color-primary-soft",
+        "tonalRamp": [
+          "#1A2A4A",
+          "#185ABC",
+          "#1967D2",
+          "#1A73E8",
+          "#4285F4",
+          "#8AB4F8",
+          "#AECBFA",
+          "#E8F0FE"
+        ]
+      },
+      "focus": {
+        "role": "primary",
+        "displayName": "Focus Blue",
+        "canonical": "#1A73E8",
+        "darkValue": "#8AB4F8",
+        "cssVar": "--color-focus",
+        "tonalRamp": [
+          "#1A2A4A",
+          "#185ABC",
+          "#1967D2",
+          "#1A73E8",
+          "#4285F4",
+          "#8AB4F8",
+          "#AECBFA",
+          "#E8F0FE"
+        ]
+      },
+      "brand-blue": {
+        "role": "secondary",
+        "displayName": "GDG Blue",
+        "canonical": "#4285F4",
+        "cssVar": "--color-brand-blue",
+        "tonalRamp": [
+          "#1A2A4A",
+          "#185ABC",
+          "#1967D2",
+          "#1A73E8",
+          "#4285F4",
+          "#8AB4F8",
+          "#AECBFA",
+          "#E8F0FE"
+        ]
+      },
+      "brand-red": {
+        "role": "secondary",
+        "displayName": "GDG Red",
+        "canonical": "#EA4335",
+        "cssVar": "--color-brand-red",
+        "tonalRamp": [
+          "#2C1615",
+          "#C5221F",
+          "#EA4335",
+          "#F28B82",
+          "#FCE8E6"
+        ]
+      },
+      "brand-yellow": {
+        "role": "secondary",
+        "displayName": "GDG Yellow",
+        "canonical": "#FBBC04",
+        "cssVar": "--color-brand-yellow",
+        "tonalRamp": [
+          "#2A2410",
+          "#7A4F01",
+          "#FBBC04",
+          "#FDD663",
+          "#FEF7E0"
+        ]
+      },
+      "brand-green": {
+        "role": "secondary",
+        "displayName": "GDG Green",
+        "canonical": "#34A853",
+        "cssVar": "--color-brand-green",
+        "tonalRamp": [
+          "#13261C",
+          "#137333",
+          "#34A853",
+          "#81C995",
+          "#E6F4EA"
+        ]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "Success",
+        "canonical": "#137333",
+        "darkValue": "#81C995",
+        "cssVar": "--color-success",
+        "tonalRamp": [
+          "#13261C",
+          "#137333",
+          "#34A853",
+          "#81C995",
+          "#E6F4EA"
+        ]
+      },
+      "warning": {
+        "role": "tertiary",
+        "displayName": "Warning",
+        "canonical": "#7A4F01",
+        "darkValue": "#FDD663",
+        "cssVar": "--color-warning",
+        "tonalRamp": [
+          "#2A2410",
+          "#7A4F01",
+          "#FBBC04",
+          "#FDD663",
+          "#FEF7E0"
+        ]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Danger",
+        "canonical": "#C5221F",
+        "darkValue": "#F28B82",
+        "cssVar": "--color-danger",
+        "tonalRamp": [
+          "#2C1615",
+          "#C5221F",
+          "#EA4335",
+          "#F28B82",
+          "#FCE8E6"
+        ]
+      },
+      "bg": {
+        "role": "neutral",
+        "displayName": "Page Ground",
+        "canonical": "#F8F9FC",
+        "darkValue": "#0A0D17",
+        "cssVar": "--color-bg",
+        "tonalRamp": [
+          "#070910",
+          "#141927",
+          "#262D40",
+          "#4B5368",
+          "#69738A",
+          "#B3BBCC",
+          "#E1E5EE",
+          "#F8F9FC"
+        ]
+      },
+      "bg-sunken": {
+        "role": "neutral",
+        "displayName": "Sunken Ground",
+        "canonical": "#F1F3F8",
+        "darkValue": "#070910",
+        "cssVar": "--color-bg-sunken",
+        "tonalRamp": [
+          "#070910",
+          "#141927",
+          "#262D40",
+          "#4B5368",
+          "#69738A",
+          "#B3BBCC",
+          "#E1E5EE",
+          "#F8F9FC"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "#FFFFFF",
+        "darkValue": "#141927",
+        "cssVar": "--color-surface",
+        "tonalRamp": [
+          "#070910",
+          "#141927",
+          "#262D40",
+          "#4B5368",
+          "#69738A",
+          "#B3BBCC",
+          "#E1E5EE",
+          "#F8F9FC"
+        ]
+      },
+      "stage": {
+        "role": "neutral",
+        "displayName": "Stage",
+        "canonical": "#EEF1F7",
+        "darkValue": "#0F1320",
+        "cssVar": "--color-stage",
+        "tonalRamp": [
+          "#070910",
+          "#141927",
+          "#262D40",
+          "#4B5368",
+          "#69738A",
+          "#B3BBCC",
+          "#E1E5EE",
+          "#F8F9FC"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#141927",
+        "darkValue": "#FFFFFF",
+        "cssVar": "--color-text",
+        "tonalRamp": [
+          "#070910",
+          "#141927",
+          "#262D40",
+          "#4B5368",
+          "#69738A",
+          "#B3BBCC",
+          "#E1E5EE",
+          "#F8F9FC"
+        ]
+      },
+      "code-bg": {
+        "role": "neutral",
+        "displayName": "Payload Dark",
+        "canonical": "#141927",
+        "darkValue": "#1B2132",
+        "cssVar": "--color-code-bg",
+        "tonalRamp": [
+          "#070910",
+          "#141927",
+          "#262D40",
+          "#4B5368",
+          "#69738A",
+          "#B3BBCC",
+          "#E1E5EE",
+          "#F8F9FC"
+        ],
+        "note": "Not yet in Figma (with code-fg, code-accent, code-mark)."
+      }
+    },
+    "typographyMeta": {
+      "display-xl": {
+        "displayName": "Display XL",
+        "purpose": "Landing hero headline only."
+      },
+      "display-l": {
+        "displayName": "Display L",
+        "purpose": "Landing section headings and final CTA."
+      },
+      "display-m": {
+        "displayName": "Display M",
+        "purpose": "Large numeric callouts (landing contrast ratio)."
+      },
+      "title-l": {
+        "displayName": "Title L",
+        "purpose": "Studio panel titles."
+      },
+      "title-m": {
+        "displayName": "Title M",
+        "purpose": "FAQ questions and text-face sub-heads."
+      },
+      "body-l": {
+        "displayName": "Body L",
+        "purpose": "Ledes and section intros."
+      },
+      "body-m": {
+        "displayName": "Body M",
+        "purpose": "Document default and inputs."
+      },
+      "body-s": {
+        "displayName": "Body S",
+        "purpose": "Hints, captions, meta."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Small group captions and field-adjacent labels."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Payloads, hex, ratios, units, kbd only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "elevation-1",
+        "value": "0 1px 2px rgba(20, 25, 39, 0.06), 0 1px 1px rgba(20, 25, 39, 0.04)",
+        "darkValue": "0 1px 2px rgba(0, 0, 0, 0.5)",
+        "purpose": "Resting lift: segmented/tab thumbs, landing preset cards, switch knob."
+      },
+      {
+        "name": "elevation-2",
+        "value": "0 2px 4px rgba(20, 25, 39, 0.05), 0 8px 24px -8px rgba(20, 25, 39, 0.16)",
+        "darkValue": "0 2px 4px rgba(0, 0, 0, 0.4), 0 10px 28px -10px rgba(0, 0, 0, 0.7)",
+        "purpose": "Primary buttons, floating nav, types panel, payload pill, slider thumbs."
+      },
+      {
+        "name": "elevation-3",
+        "value": "0 4px 8px rgba(20, 25, 39, 0.06), 0 24px 56px -20px rgba(20, 25, 39, 0.28)",
+        "darkValue": "0 4px 10px rgba(0, 0, 0, 0.45), 0 28px 64px -24px rgba(0, 0, 0, 0.85)",
+        "purpose": "QR plates, demo code frames, toast."
+      }
+    ],
+    "motion": [
+      {
+        "name": "duration-fast",
+        "value": "120ms",
+        "purpose": "Hover and colour changes."
+      },
+      {
+        "name": "duration-base",
+        "value": "200ms",
+        "purpose": "Toggles, chevrons, skip link."
+      },
+      {
+        "name": "duration-slow",
+        "value": "320ms",
+        "purpose": "Background swaps; Motion default duration."
+      },
+      {
+        "name": "duration-deliberate",
+        "value": "560ms",
+        "purpose": "Heading settles, tick draw, hero shapes."
+      },
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.2, 0, 0, 1)",
+        "purpose": "State changes; Motion default easing."
+      },
+      {
+        "name": "ease-emphasized",
+        "value": "cubic-bezier(0.05, 0.7, 0.1, 1)",
+        "purpose": "Arrivals: toast, reveals, morph cells, switch knob."
+      },
+      {
+        "name": "ease-exit",
+        "value": "cubic-bezier(0.3, 0, 0.8, 0.15)",
+        "purpose": "Defined for exits; not yet used."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "studio-tablet",
+        "value": "768px"
+      },
+      {
+        "name": "studio-desktop",
+        "value": "1200px"
+      },
+      {
+        "name": "landing-two-col",
+        "value": "900px"
+      },
+      {
+        "name": "landing-scan",
+        "value": "960px"
+      },
+      {
+        "name": "landing-nav-links",
+        "value": "980px"
+      },
+      {
+        "name": "landing-hero",
+        "value": "1024px"
+      }
+    ],
+    "figma": {
+      "file": "https://www.figma.com/design/ReC7bi5MHPI7umlpCt3OZM",
+      "collections": [
+        "Theme/Light",
+        "Theme/Dark"
+      ],
+      "note": "Light and dark are split into two collections because the Starter plan allows one mode per collection. code-bg, code-fg, code-accent and code-mark exist in code but not yet in Figma."
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The lead action: blue pill with a soft lift.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Create a QR code <svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4.5 12h15m0 0-5.5-5.5M19.5 12l-5.5 5.5\"/></svg></button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 24px; border: 1.5px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font-family: var(--font-body); font-size: 15px; font-weight: 650; letter-spacing: 0.005em; cursor: pointer; transition: background-color 120ms cubic-bezier(0.2,0,0,1), border-color 120ms cubic-bezier(0.2,0,0,1), transform 120ms cubic-bezier(0.2,0,0,1); } .ds-btn:hover { transform: translateY(-1px); } .ds-btn:active { transform: translateY(0) scale(0.98); } .ds-btn:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; } .ds-btn-primary { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); box-shadow: var(--elevation-2); } .ds-btn-primary:hover { background: var(--color-primary-hover); border-color: var(--color-primary-hover); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Outlined pill for the second choice.",
+      "html": "<button class=\"ds-btn2\">See how it scans</button>",
+      "css": ".ds-btn2 { display: inline-flex; align-items: center; min-height: 48px; padding: 0 24px; border: 1.5px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font-family: var(--font-body); font-size: 15px; font-weight: 650; cursor: pointer; transition: background-color 120ms cubic-bezier(0.2,0,0,1), transform 120ms cubic-bezier(0.2,0,0,1); } .ds-btn2:hover { background: var(--color-surface-inset); transform: translateY(-1px); } .ds-btn2:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "48px field, 14px radius, focus border plus halo.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field__label\">Network name (SSID)</span><input class=\"ds-input\" value=\"GDG-Campus\" /></label>",
+      "css": ".ds-field { display: grid; gap: 8px; } .ds-field__label { font-family: var(--font-body); font-size: 14px; font-weight: 650; color: var(--color-text); } .ds-input { min-height: 48px; padding: 12px 16px; border: 1.5px solid var(--color-border-strong); border-radius: 14px; background: var(--color-surface); color: var(--color-text); font-family: var(--font-body); font-size: 16px; transition: border-color 120ms cubic-bezier(0.2,0,0,1), box-shadow 120ms cubic-bezier(0.2,0,0,1); } .ds-input:hover { border-color: var(--color-text-subtle); } .ds-input:focus { outline: none; border-color: var(--color-focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus) 28%, transparent); }"
+    },
+    {
+      "name": "Landing Nav",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Floating pill bar with muted pill links and a small primary action.",
+      "html": "<nav class=\"ds-nav\"><strong class=\"ds-nav__brand\">QR Studio</strong><a class=\"ds-nav__link\" href=\"#\">Types</a><a class=\"ds-nav__link\" href=\"#\">Scan check</a><a class=\"ds-nav__cta\" href=\"#\">Open Studio</a></nav>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 4px; min-height: 68px; padding: 8px 8px 8px 16px; border: 1px solid var(--color-border); border-radius: 999px; background: color-mix(in srgb, var(--color-surface) 92%, transparent); box-shadow: var(--elevation-2); font-family: var(--font-body); } .ds-nav__brand { margin-right: auto; font-family: var(--font-display); font-size: 19px; font-weight: 750; letter-spacing: -0.02em; color: var(--color-text); } .ds-nav__link { padding: 8px 12px; border-radius: 999px; color: var(--color-text-muted); font-size: 15px; font-weight: 600; text-decoration: none; transition: color 120ms cubic-bezier(0.2,0,0,1), background-color 120ms cubic-bezier(0.2,0,0,1); } .ds-nav__link:hover { color: var(--color-text); background: var(--color-surface-inset); } .ds-nav__link:focus-visible, .ds-nav__cta:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; } .ds-nav__cta { display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border-radius: 999px; background: var(--color-primary); color: var(--color-on-primary); font-size: 14px; font-weight: 650; text-decoration: none; box-shadow: var(--elevation-2); } .ds-nav__cta:hover { background: var(--color-primary-hover); }"
+    },
+    {
+      "name": "Type Chip",
+      "kind": "chip",
+      "refersTo": "type-chip",
+      "description": "Type picker option: brand-colour icon chip under dark ink; selected gets blue outline and wash.",
+      "html": "<div class=\"ds-types\"><button class=\"ds-type\" style=\"--chip: var(--color-brand-blue)\"><span class=\"ds-type__chip\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M10 14a4.5 4.5 0 0 0 6.4 0l3.1-3.1a4.5 4.5 0 0 0-6.4-6.4L12 5.6M14 10a4.5 4.5 0 0 0-6.4 0l-3.1 3.1a4.5 4.5 0 0 0 6.4 6.4l1.1-1.1\"/></svg></span>URL</button><button class=\"ds-type is-selected\" aria-checked=\"true\" style=\"--chip: var(--color-brand-yellow)\"><span class=\"ds-type__chip\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M3 9.5a13.5 13.5 0 0 1 18 0M6.3 13a8.5 8.5 0 0 1 11.4 0M9.6 16.4a3.6 3.6 0 0 1 4.8 0M12 19.6h.01\"/></svg></span>Wi-Fi</button></div>",
+      "css": ".ds-types { display: flex; gap: 8px; } .ds-type { display: grid; justify-items: center; gap: 8px; width: 72px; padding: 12px 4px; border: 1.5px solid var(--color-border); border-radius: 20px; background: var(--color-surface); color: var(--color-text); font-family: var(--font-body); font-size: 13.5px; font-weight: 650; cursor: pointer; transition: border-color 120ms cubic-bezier(0.2,0,0,1); } .ds-type:hover { border-color: var(--color-border-strong); } .ds-type:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; } .ds-type.is-selected { border: 2px solid var(--color-primary); background: var(--color-primary-soft); color: var(--color-on-primary-soft); } .ds-type__chip { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px; background: var(--chip); color: var(--color-on-brand); }"
+    },
+    {
+      "name": "Studio Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Flat bordered container, 28px radius, no shadow.",
+      "html": "<section class=\"ds-panel\"><h3 class=\"ds-panel__title\">Design</h3><p class=\"ds-panel__hint\">Advice only. Downloads are never blocked.</p></section>",
+      "css": ".ds-panel { display: grid; gap: 24px; padding: 28px; border: 1px solid var(--color-border); border-radius: 28px; background: var(--color-surface); } .ds-panel__title { font-family: var(--font-display); font-size: 28px; font-weight: 700; line-height: 1.15; letter-spacing: -0.01em; color: var(--color-text); margin: 0; } .ds-panel__hint { font-family: var(--font-body); font-size: 14px; color: var(--color-text-subtle); margin: 0; }"
+    },
+    {
+      "name": "Stage with Verdict",
+      "kind": "custom",
+      "refersTo": "stage-surface",
+      "description": "Signature: dotted stage, lifted plate, scan verdict pill.",
+      "html": "<div class=\"ds-stage\"><div class=\"ds-stage__plate\"><svg viewBox=\"0 0 21 21\" width=\"100%\" fill=\"#141927\"><rect x=\"0\" y=\"0\" width=\"7\" height=\"7\" rx=\"1.4\"/><rect x=\"14\" y=\"0\" width=\"7\" height=\"7\" rx=\"1.4\"/><rect x=\"0\" y=\"14\" width=\"7\" height=\"7\" rx=\"1.4\"/><rect x=\"1.5\" y=\"1.5\" width=\"4\" height=\"4\" fill=\"#fff\"/><rect x=\"15.5\" y=\"1.5\" width=\"4\" height=\"4\" fill=\"#fff\"/><rect x=\"1.5\" y=\"15.5\" width=\"4\" height=\"4\" fill=\"#fff\"/><rect x=\"2.5\" y=\"2.5\" width=\"2\" height=\"2\"/><rect x=\"16.5\" y=\"2.5\" width=\"2\" height=\"2\"/><rect x=\"2.5\" y=\"16.5\" width=\"2\" height=\"2\"/><rect x=\"9\" y=\"9\" width=\"3\" height=\"3\"/><rect x=\"14\" y=\"14\" width=\"2\" height=\"2\"/></svg></div><button class=\"ds-verdict\">No scan risks · 17.7:1 contrast</button></div>",
+      "css": ".ds-stage { display: grid; place-items: center; gap: 16px; padding: 40px; border: 1px solid var(--color-border); border-radius: 40px; background: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--color-text) 14%, transparent) 1px, transparent 0) 0 0 / 18px 18px, var(--color-stage); } .ds-stage__plate { width: 200px; aspect-ratio: 1; padding: 6%; border-radius: 28px; background: #ffffff; box-shadow: var(--elevation-3); } .ds-verdict { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border: 0; border-radius: 999px; background: var(--color-success-soft); color: var(--color-success); font-family: var(--font-body); font-size: 13.5px; cursor: pointer; } .ds-verdict:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }"
+    },
+    {
+      "name": "Payload Pill",
+      "kind": "custom",
+      "refersTo": "payload-pill",
+      "description": "Dark in both themes: yellow type badge plus mono payload.",
+      "html": "<p class=\"ds-payload\"><span class=\"ds-payload__type\">URL</span><code class=\"ds-payload__code\">https://gdg.community.dev</code></p>",
+      "css": ".ds-payload { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; border-radius: 999px; background: var(--color-code-bg); color: var(--color-code-fg); box-shadow: var(--elevation-2); margin: 0; } .ds-payload__type { padding: 2px 10px; border-radius: 999px; background: var(--color-brand-yellow); color: var(--color-on-brand); font-family: var(--font-body); font-size: 12px; font-weight: 700; } .ds-payload__code { font-family: var(--font-mono); font-size: 12.5px; }"
+    },
+    {
+      "name": "Toast",
+      "kind": "custom",
+      "refersTo": "toast",
+      "description": "Ink pill with status icon and yellow Undo action.",
+      "html": "<div class=\"ds-toast\" role=\"status\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ds-toast__icon\"><path d=\"M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM8 12.3l2.7 2.7L16.2 9.5\"/></svg><span>Design reset</span><button class=\"ds-toast__action\">Undo</button></div>",
+      "css": ".ds-toast { display: inline-flex; align-items: center; gap: 12px; padding: 12px 12px 12px 16px; border-radius: 999px; background: var(--color-text); color: var(--color-text-inverse); box-shadow: var(--elevation-3); font-family: var(--font-body); font-size: 14.5px; font-weight: 600; } .ds-toast__icon { color: var(--color-brand-green); } .ds-toast__action { padding: 4px 12px; border: 0; border-radius: 999px; background: var(--color-brand-yellow); color: var(--color-on-brand); font-weight: 700; cursor: pointer; } .ds-toast__action:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Code on Stage",
+    "overview": "The live, engine-rendered QR code is the product and its own proof, so every surface stages it: a white plate lifted on a coloured or dotted stage, never a thumbnail in a card. Around it the system is a cool, quiet neutral ground with one lead action colour (GDG blue) and three brand fills (red, yellow, green) that carry meaning (code type, scan-check severity) and form our own finder-pattern shapes. The feel is the brief's three words: confident (big rounded display type, pill actions), playful (GDG colour shapes, springy settles), exact (real payload strings in mono, real contrast ratios, numbers shown rather than implied).\n\nTwo routes share one token set. The landing page (`/`) is expressive: a 1240px container, generous section rhythm, brand-colour shapes and frames. The studio (`/studio`) is a workspace: flat bordered panels on a sunken ground, the stage in the centre, the scan check beside the controls that cause its warnings. Light and dark are first-class; the theme is resolved before first paint from `localStorage` (`qr-studio:theme:v1`) or `prefers-color-scheme` and set as `data-theme` on `<html>`.\n\n**Source of truth.** `design/tokens.mjs` generates `src/styles/tokens.css` (`node design/build-tokens.mjs`) and the Figma variable script, so names match: Figma `color/bg` is CSS `--color-bg`. Never hand-edit `tokens.css`. The Figma library (https://www.figma.com/design/ReC7bi5MHPI7umlpCt3OZM) mirrors the tokens, with light and dark split into two collections, **Theme/Light** and **Theme/Dark**, because the Figma Starter plan allows only one mode per collection. The four `code-*` tokens (`code-bg`, `code-fg`, `code-accent`, `code-mark`) exist in code but are not yet in Figma.",
+    "keyCharacteristics": [
+      "Cool neutral ground; GDG blue leads; red, yellow, green as fills that mean something.",
+      "Bricolage Grotesque display, Figtree text and UI, JetBrains Mono only for data.",
+      "Pills for actions and status, soft squircles for containers, 14px fields.",
+      "Flat panels; shadows only on objects that float (plates, nav, primary button, toast).",
+      "One authored motion moment per surface; everything honours `prefers-reduced-motion`."
+    ],
+    "rules": [
+      {
+        "name": "The Ink-on-Brand Rule",
+        "body": "Brand blue, red, yellow and green are fills under `--color-on-brand` ink, never text colour and never thin text on the page ground. The \"Text\" type is the exception that proves it: its chip uses `--color-text-muted` with `--color-surface` ink.",
+        "section": "colors"
+      },
+      {
+        "name": "The Meaning Map Rule",
+        "body": "Type colours are fixed everywhere a type appears (landing showcase, type picker, recent badges, how-it-works): URL blue, Text neutral, Email red, Phone green, Wi-Fi yellow. Severity is fixed too: ok green, warn yellow, bad red for marks and frames; text-level status uses the success/warning/danger pairs.",
+        "section": "colors"
+      },
+      {
+        "name": "The White Plate Rule",
+        "body": "A QR code is always rendered on a light plate. Landing plates (hero, types showcase) are literal white (#ffffff) in both themes because they are scan targets; the studio plate uses `--color-surface` and the canvas itself carries the user's chosen background.",
+        "section": "colors"
+      },
+      {
+        "name": "The Mono-Means-Data Rule",
+        "body": "JetBrains Mono is used only for strings a machine reads or a number with a unit: payloads, hex, contrast ratios, sizes, file names, shortcuts. Never for decoration or labels.",
+        "section": "typography"
+      },
+      {
+        "name": "The Two-Faces Rule",
+        "body": "Bricolage for display and panel titles; Figtree for everything interactive (buttons, tabs, fields, FAQ). Buttons are Figtree 650.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Panels, Lifted Objects Rule",
+        "body": "Containers never carry shadows; the code plate always does. If a new element is not a plate, a floating bar, a primary action or an overlay, it gets a border, not a shadow.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Pill Action Rule",
+        "body": "If it acts or reports, it is a pill. If it holds content, it is a squircle. Square corners do not appear.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "**Do** add or change tokens in `design/tokens.mjs` and regenerate; reference them as `var(--color-*)`, `var(--space-*)`, `var(--radius-*)`, never raw hex in components.",
+      "**Do** put every QR code on a light plate with `--elevation-3` (The White Plate Rule).",
+      "**Do** use brand colours as fills under `--color-on-brand` ink, and keep the type and severity colour map fixed (The Meaning Map Rule).",
+      "**Do** use pills for actions and status, squircles for containers (The Pill Action Rule).",
+      "**Do** keep focus visible: 3px solid `--color-focus`, 2px offset globally; inputs use the focus border plus 3px 28% halo.",
+      "**Do** keep interactive targets at 44px or larger for primary controls (buttons 48px, icon buttons and tabs 44px).",
+      "**Do** honour reduced motion: the global reset shortens all CSS animation and transition, Motion respects the user setting, and the hero stops cycling and typing.",
+      "**Do** describe codes to assistive tech by type (\"URL QR code preview\"), never by reading the payload aloud, and mask Wi-Fi passwords by default.",
+      "**Do** keep new Figma variables in sync: light values in Theme/Light, dark values in Theme/Dark; add the four `code-*` tokens when Figma is next updated."
+    ],
+    "donts": [
+      "**Don't** use brand red, yellow or green as text colour or thin strokes on the page ground; they fail contrast as text.",
+      "**Don't** use JetBrains Mono for labels, headings or decoration (The Mono-Means-Data Rule).",
+      "**Don't** add shadows to panels or cards (The Flat Panels, Lifted Objects Rule).",
+      "**Don't** use purple-to-blue gradients, glassmorphism, gradient text, emoji icons, or eyebrow labels above headings.",
+      "**Don't** use or recreate the GDG or Google logos; the mark is our own three finder squares and a green module.",
+      "**Don't** put payloads in URLs or show any claim (user counts, testimonials, benchmarks) the product cannot prove."
+    ]
+  }
+}
