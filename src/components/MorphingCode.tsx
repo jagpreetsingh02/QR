@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { EccLevel } from '../types';
 import { moduleGrid } from '../lib/render';
 
@@ -13,43 +13,24 @@ interface MorphingCodeProps {
 }
 
 /**
- * A QR code drawn module by module. On mount the modules assemble in a
- * diagonal wave; when `text` changes, only the cells that differ flip, so the
- * code visibly morphs into the new payload. CSS owns the motion and turns it
- * off under prefers-reduced-motion.
+ * A QR code drawn module by module. Only dark modules are rendered, each keyed
+ * by its position: on first paint they assemble in a diagonal wave, and when
+ * `text` changes only the cells that turn dark mount (and animate in) while
+ * the ones that turn light disappear, so the code visibly morphs.
  */
 export function MorphingCode({ text, version = 4, ecc = 'M', margin = 2, label, className }: MorphingCodeProps) {
   const grid = useMemo(() => moduleGrid(text, ecc, version), [text, ecc, version]);
-  const [assembled, setAssembled] = useState(false);
-
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => requestAnimationFrame(() => setAssembled(true)));
-    return () => cancelAnimationFrame(frame);
-  }, []);
-
-  const size = grid.length;
-  const cells = size + margin * 2;
+  const cells = grid.length + margin * 2;
 
   return (
-    <svg
-      className={`morph-code${assembled ? ' is-assembled' : ''}${className ? ` ${className}` : ''}`}
-      viewBox={`0 0 ${cells} ${cells}`}
-      role="img"
-      aria-label={label}
-    >
+    <svg className={`morph-code${className ? ` ${className}` : ''}`} viewBox={`0 0 ${cells} ${cells}`} role="img" aria-label={label}>
       <rect className="morph-code__bg" width={cells} height={cells} />
-      {grid.map((row, r) =>
-        row.map((on, c) => (
-          <rect
-            key={`${r}-${c}`}
-            className={on ? 'morph-code__cell is-on' : 'morph-code__cell'}
-            x={c + margin}
-            y={r + margin}
-            width={1}
-            height={1}
-            style={{ transitionDelay: `${(r + c) * 9}ms` }}
-          />
-        )),
+      {grid.flatMap((row, r) =>
+        row.map((on, c) =>
+          on ? (
+            <rect key={`${r}-${c}`} className="morph-code__cell" x={c + margin} y={r + margin} width={1} height={1} style={{ animationDelay: `${(r + c) * 9}ms` }} />
+          ) : null,
+        ),
       )}
     </svg>
   );

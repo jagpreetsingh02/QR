@@ -77,7 +77,8 @@ export function Stage({ canvasRef, style, content, encoded, isRendered, renderEr
             </div>
           </dl>
           <div className="stage__payload">
-            <code className="payload" aria-label={masked ? 'Encoded payload, password hidden' : 'Encoded payload'}>
+            <code className="payload">
+              <span className="visually-hidden">{masked ? 'Encoded payload, password hidden: ' : 'Encoded payload: '}</span>
               {shown}
             </code>
             {content.type === 'wifi' && content.password && content.encryption !== 'nopass' ? (

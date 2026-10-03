@@ -20,7 +20,7 @@ export function LogoMark({ size = 36 }: { size?: number }) {
 
 export function Logo({ showByline = true }: { showByline?: boolean }) {
   return (
-    <Link to="/" className="wordmark" aria-label="QR Studio home">
+    <Link to="/" className="wordmark">
       <LogoMark />
       <span>
         <span className="wordmark__name">QR Studio</span>

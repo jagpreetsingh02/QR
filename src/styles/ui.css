@@ -175,23 +175,21 @@
 
 .morph-code__cell {
   fill: #141927;
-  opacity: 0;
   transform-box: fill-box;
   transform-origin: center;
-  transform: scale(0.3);
-  transition:
-    opacity 220ms var(--ease-standard),
-    transform 420ms var(--ease-emphasized);
+  animation: morph-in 420ms var(--ease-emphasized) both;
 }
 
-.morph-code.is-assembled .morph-code__cell.is-on {
-  opacity: 1;
-  transform: none;
+/* Cells mount when they turn dark, so each one assembles in on arrival. */
+@keyframes morph-in {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .morph-code__cell {
-    transition: none;
-    transform: none;
+    animation: none;
   }
 }

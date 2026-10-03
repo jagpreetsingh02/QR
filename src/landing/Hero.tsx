@@ -1,17 +1,41 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { Link } from '../Link';
 import { Icon } from '../components/Icon';
 import { MorphingCode } from '../components/MorphingCode';
 import { HERO_SAMPLES, encoded } from './samples';
 import { useCycle, usePrefersReducedMotion, useTypewriter } from './hooks';
 
+/**
+ * Starts the payload cycle on the visitor's first interaction (or after a
+ * pause), so the first code stays put long enough to read and the page is
+ * visually complete quickly.
+ */
+function useEngaged(delayMs: number): boolean {
+  const [engaged, setEngaged] = useState(false);
+  useEffect(() => {
+    if (engaged) return;
+    const engage = () => setEngaged(true);
+    const events = ['pointermove', 'pointerdown', 'keydown', 'scroll', 'touchstart'] as const;
+    events.forEach((e) => window.addEventListener(e, engage, { once: true, passive: true }));
+    const timer = window.setTimeout(engage, delayMs);
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, engage));
+      window.clearTimeout(timer);
+    };
+  }, [engaged, delayMs]);
+  return engaged;
+}
+
 export function Hero() {
   const reduced = usePrefersReducedMotion();
+  const engaged = useEngaged(8000);
   const [paused, setPaused] = useState(false);
-  const [index] = useCycle(HERO_SAMPLES.length, 4200, paused || reduced);
+  const [index] = useCycle(HERO_SAMPLES.length, 4200, paused || reduced || !engaged);
   const sample = HERO_SAMPLES[index];
   const payload = encoded(sample);
   const typed = useTypewriter(payload, reduced);
+  const typing = typed.length < payload.length;
 
   return (
     <section className="lp-hero" aria-labelledby="hero-title">
@@ -37,6 +61,7 @@ export function Hero() {
 
         <div
           className="lp-stage"
+          style={{ '--turn': index } as CSSProperties}
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
           onFocus={() => setPaused(true)}
@@ -49,16 +74,17 @@ export function Hero() {
 
           <figure className="lp-stage__plate" tabIndex={0} aria-label={`Live ${sample.label} QR code. Hover or focus to pause.`}>
             <MorphingCode text={payload} label={`QR code encoding a ${sample.label} payload`} />
-            {!reduced ? <span className="lp-stage__scan" aria-hidden="true" /> : null}
+            {!reduced ? <span key={index} className="lp-stage__scan" aria-hidden="true" /> : null}
           </figure>
 
-          <p className="lp-stage__payload" aria-live="polite">
+          <p className="lp-stage__payload">
             <span className="lp-stage__type">{sample.label}</span>
-            <code className="payload" aria-label={payload}>
+            <code className="payload">
               <span aria-hidden="true">
                 {typed}
-                <span className="lp-caret" />
+                {typing ? <span className="lp-caret" /> : null}
               </span>
+              <span className="visually-hidden">{payload}</span>
             </code>
           </p>
         </div>

@@ -168,8 +168,8 @@
   right: 0;
   border: clamp(10px, 2.6vw, 18px) solid var(--color-brand-red);
   border-radius: 30%;
-  rotate: -12deg;
-  animation: lp-drift 9s var(--ease-standard) infinite alternate;
+  rotate: calc(-12deg + var(--turn, 0) * 18deg);
+  transition: rotate var(--duration-deliberate) var(--ease-emphasized);
 }
 
 .lp-shape--pill {
@@ -179,8 +179,8 @@
   left: -2%;
   border-radius: var(--radius-full);
   background: var(--color-brand-yellow);
-  rotate: 8deg;
-  animation: lp-drift 11s var(--ease-standard) infinite alternate-reverse;
+  rotate: calc(8deg - var(--turn, 0) * 6deg);
+  transition: rotate var(--duration-deliberate) var(--ease-emphasized);
 }
 
 .lp-shape--dot {
@@ -190,13 +190,8 @@
   right: 3%;
   border-radius: 50%;
   background: var(--color-brand-green);
-  animation: lp-drift 7s var(--ease-standard) infinite alternate;
-}
-
-@keyframes lp-drift {
-  to {
-    translate: 0 -10px;
-  }
+  translate: 0 calc(var(--turn, 0) * -10px);
+  transition: translate var(--duration-deliberate) var(--ease-emphasized);
 }
 
 .lp-stage__plate {
@@ -222,20 +217,24 @@
   height: 3px;
   border-radius: 2px;
   background: var(--color-brand-green);
-  animation: lp-scan 2.8s var(--ease-standard) infinite alternate;
+  opacity: 0;
+  animation: lp-scan 1.4s var(--ease-standard) 0.5s 1 both;
 }
 
+/* One sweep per payload: the line is re-keyed whenever the code morphs. */
 @keyframes lp-scan {
-  to {
-    top: 92%;
+  0% {
+    top: 8%;
+    opacity: 0;
   }
-}
-
-.lp-stage:hover .lp-shape,
-.lp-stage:hover .lp-stage__scan,
-.lp-stage:focus-within .lp-shape,
-.lp-stage:focus-within .lp-stage__scan {
-  animation-play-state: paused;
+  15%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 92%;
+    opacity: 0;
+  }
 }
 
 .lp-stage__payload {
@@ -248,8 +247,8 @@
   max-width: 88%;
   padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
   border-radius: var(--radius-full);
-  background: var(--color-text);
-  color: var(--color-text-inverse);
+  background: var(--color-code-bg);
+  color: var(--color-code-fg);
   box-shadow: var(--elevation-2);
 }
 
@@ -277,14 +276,7 @@
   height: 1.05em;
   margin-left: 1px;
   vertical-align: -0.15em;
-  background: var(--color-brand-yellow);
-  animation: lp-blink 1s steps(1) infinite;
-}
-
-@keyframes lp-blink {
-  50% {
-    opacity: 0;
-  }
+  background: var(--color-code-accent);
 }
 
 /* --- Trust strip -------------------------------------------------------- */
@@ -445,21 +437,22 @@
 .lp-types__payload {
   display: block;
   padding: var(--space-4);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: var(--color-text);
-  color: var(--color-text-inverse);
+  background: var(--color-code-bg);
+  color: var(--color-code-fg);
   font-size: 14px;
 }
 
 .tok-scheme {
-  color: var(--color-brand-yellow);
+  color: var(--color-code-accent);
 }
 
 .tok-escape {
   padding: 0 2px;
   border-radius: 3px;
-  background: var(--color-brand-red);
-  color: #ffffff;
+  background: var(--color-code-mark);
+  color: var(--color-code-fg);
 }
 
 .lp-types__detail {
@@ -1127,8 +1120,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .lp-shape,
-  .lp-stage__scan,
-  .lp-caret {
+  .lp-stage__scan {
     animation: none;
+    transition: none;
   }
 }

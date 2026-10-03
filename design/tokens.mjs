@@ -48,6 +48,11 @@ export const semantic = {
   'brand-yellow': ['yellow.500', 'yellow.500'],
   'brand-green': ['green.500', 'green.500'],
   'on-brand': ['neutral.900', 'neutral.900'],
+  // Payload/code blocks stay dark in both themes so syntax accents keep their contrast.
+  'code-bg': ['neutral.900', 'neutral.850'],
+  'code-fg': ['neutral.0', 'neutral.0'],
+  'code-accent': ['yellow.300', 'yellow.300'],
+  'code-mark': ['red.700', 'red.700'],
 };
 
 export const space = { '0-5': 2, '1': 4, '2': 8, '3': 12, '4': 16, '5': 20, '6': 24, '8': 32, '10': 40, '12': 48, '16': 64, '20': 80, '24': 96, '32': 128 };
