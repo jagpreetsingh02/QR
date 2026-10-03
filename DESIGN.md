@@ -358,6 +358,11 @@ Confident pills, Figtree 650 at 15px.
 - **Segmented control** (error correction): inset track (`--radius-lg`), options show a display-face letter over a mono detail; the selected thumb is a surface tile with `--elevation-1` that slides between options.
 - **Mobile panel tabs / landing type tabs:** pill track on surface or surface-inset; landing uses a sliding surface pill, studio fills the active tab with Blue Wash. Count badges are ink pills.
 
+- **Design panel tabs (Style | Photo):** a pill track on surface-inset with two equal tabs; the active tab is a surface pill with `--elevation-1`. The Photo tab carries a green "On" badge pill while a photo is set, so the state is visible from the Style tab.
+
+### Photo panel
+Top: the drop zone (dashed 2px, `--radius-lg`) or, once a photo is set, the current-photo card (thumbnail, "Photo on / Stays on this device.", a swap icon button to replace, a secondary "Remove" pill). Then the Blend segmented control (Dots, Tinted, Underlay) and grouped controls separated by a hairline: blend-specific controls first (for Dots: Dot size, Dot shape, Halo, Eye plate, Rounded plate switch, Border colour), then "Photo adjustments" (Readability, Brightness, Photo contrast, Saturation), then Detail as a segmented control. Notes (short-link tip, ECC explanation, restored-without-photo) are 14px-radius primary-soft rows with an info or link icon. Every slider has a one-line hint that says what the control trades off. The scan check on the stage reports the in-browser test scan with a pass/fail row and offers a primary small "Boost readability" pill only on a fail.
+
 ### Cards / Containers
 - **Panel:** 28px radius, surface fill, 1px border, `clamp(18px, 2.4vw, 28px)` padding, no shadow. At 1200px+ side panels become borderless columns.
 - **Recent card:** 20px radius, 1.5px border; hover lifts 2px and strengthens the border; current card gets a blue border and Blue Wash. A 32px remove button appears on hover/focus (always visible on `hover: none` devices).
@@ -401,7 +406,8 @@ Tokens: `--duration-fast` 120ms (hover, colour), `--duration-base` 200ms (toggle
 - **Do** keep interactive targets at 44px or larger for primary controls (buttons 48px, icon buttons and tabs 44px).
 - **Do** honour reduced motion: the global reset shortens all CSS animation and transition, Motion respects the user setting, and the hero stops cycling and typing.
 - **Do** describe codes to assistive tech by type ("URL QR code preview"), never by reading the payload aloud, and mask Wi-Fi passwords by default.
-- **Do** keep new Figma variables in sync: light values in Theme/Light, dark values in Theme/Dark; add the four `code-*` tokens when Figma is next updated.
+- **Do** keep new Figma variables in sync: light values in Theme/Light, dark values in Theme/Dark; add the four `code-*` tokens and the Photo panel when Figma is next updated (neither is in the file yet).
+- **Do** keep photo QR codes on the same white plate as plain codes; the photo's own rounded plate sits inside it.
 
 ### Don't:
 - **Don't** use brand red, yellow or green as text colour or thin strokes on the page ground; they fail contrast as text.

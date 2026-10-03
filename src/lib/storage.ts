@@ -2,6 +2,7 @@ import type { HistoryEntry, QrStyle } from '../types';
 import { QR_TYPES } from '../types';
 import { DEFAULT_STYLE } from './presets';
 import { isHexColour } from './colour';
+import { parsePhoto } from './photo';
 
 export const HISTORY_KEY = 'qr-studio:history:v1';
 export const THEME_KEY = 'qr-studio:theme:v1';
@@ -40,10 +41,12 @@ function parseStyle(raw: unknown): QrStyle {
     background: typeof raw.background === 'string' && isHexColour(raw.background) ? raw.background : DEFAULT_STYLE.background,
     ecc: ecc === 'L' || ecc === 'M' || ecc === 'Q' || ecc === 'H' ? ecc : DEFAULT_STYLE.ecc,
     margin: typeof raw.margin === 'number' ? clamp(Math.round(raw.margin), 0, 10) : DEFAULT_STYLE.margin,
+    // Older entries embedded the logo as a data URL; newer ones keep an IndexedDB reference.
     logo: typeof raw.logo === 'string' && raw.logo.startsWith('data:image/') ? raw.logo : null,
+    logoRef: typeof raw.logoRef === 'string' ? raw.logoRef : null,
     logoScale: typeof raw.logoScale === 'number' ? clamp(Math.round(raw.logoScale), 10, 35) : DEFAULT_STYLE.logoScale,
-    // Photos are never persisted; a stored entry always restores without one.
-    photo: null,
+    // Photo settings and a reference only; the image itself lives in IndexedDB.
+    photo: parsePhoto(raw.photo),
   };
 }
 

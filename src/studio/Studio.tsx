@@ -12,7 +12,8 @@ import { renderToCanvas, renderToPngDataUrl, renderToSvg } from '../lib/render';
 import { decodeCanvas } from '../lib/decode';
 import { effectiveStyle } from '../lib/photo';
 import { getScanWarnings } from '../lib/scanAdvice';
-import { hasErrors, validateContent } from '../lib/validation';
+import { hasErrors, payloadBytes, validateContent } from '../lib/validation';
+import { getImage, pruneImages } from '../lib/imageStore';
 import { ContentForm } from '../components/ContentForm';
 import { Icon } from '../components/Icon';
 import type { IconName } from '../components/Icon';
@@ -116,9 +117,20 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
     const probe = document.createElement('canvas');
     let candidate: QrStyle = style;
     let decoded = false;
-    for (let step = 0; step < 10 && !decoded; step += 1) {
+    for (let step = 0; step < 8 && !decoded; step += 1) {
       const photo = candidate.photo!;
-      candidate = { ...candidate, photo: { ...photo, contrast: Math.min(100, photo.contrast + 15), strength: Math.max(0, photo.strength - 12) } };
+      const next =
+        photo.mode === 'dots'
+          ? {
+              ...photo,
+              dotScale: Math.min(80, photo.dotScale + 6),
+              halo: Math.min(100, photo.halo + 15),
+              eyeOpacity: Math.min(100, photo.eyeOpacity + 5),
+              readability: Math.min(100, photo.readability + 12),
+              photoContrast: Math.max(-50, photo.photoContrast - 8),
+            }
+          : { ...photo, contrast: Math.min(100, photo.contrast + 15), strength: Math.max(0, photo.strength - 12) };
+      candidate = { ...candidate, photo: next };
       await renderToCanvas(probe, encoded, effectiveStyle(candidate));
       decoded = (await decodeCanvas(probe)) === encoded;
     }
@@ -126,9 +138,12 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
     const previous = style;
     setStyle(candidate);
     if (decoded) {
-      notify('success', `Readable now: strength ${candidate.photo!.strength}%, contrast ${candidate.photo!.contrast}%.`, { label: 'Undo', run: () => setStyle(previous) });
+      const p = candidate.photo!;
+      const summary = p.mode === 'dots' ? `dots ${p.dotScale}%, halo ${p.halo}%, readability ${p.readability}%` : `strength ${p.strength}%, contrast ${p.contrast}%`;
+      notify('success', `Readable now: ${summary}.`, { label: 'Undo', run: () => setStyle(previous) });
     } else {
-      notify('error', 'Still not decoding. Try Photo underlay, a calmer photo, or remove the photo.');
+      setStyle(previous);
+      notify('error', 'This photo is too busy for this content even after boosting. Try a calmer photo, a shorter link, or less Detail.');
     }
   }, [style, encoded, notify]);
 
@@ -139,16 +154,40 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
   }, [style, notify]);
 
   const restoreEntry = useCallback(
-    (entry: HistoryEntry) => {
+    async (entry: HistoryEntry) => {
+      // Images come back from IndexedDB; an entry still restores if a blob is gone.
+      const restored: QrStyle = { ...entry.style };
+      const missing: string[] = [];
+      if (entry.style.logoRef) {
+        const blob = await getImage(entry.style.logoRef);
+        if (blob) restored.logo = URL.createObjectURL(blob);
+        else {
+          restored.logo = null;
+          restored.logoRef = null;
+          missing.push('logo');
+        }
+      }
+      if (entry.style.photo) {
+        const blob = entry.style.photo.ref ? await getImage(entry.style.photo.ref) : null;
+        if (blob) restored.photo = { ...entry.style.photo, src: URL.createObjectURL(blob) };
+        else {
+          restored.photo = null;
+          missing.push('photo');
+        }
+      } else if (entry.photoOmitted) {
+        missing.push('photo');
+      }
+
       setType(entry.content.type);
       setDrafts((current) => ({ ...current, [entry.content.type]: entry.content }));
-      setStyle(entry.style);
+      setStyle(restored);
       setTouched((current) => ({ ...current, [entry.content.type]: true }));
       setActiveId(entry.id);
       setPanel('content');
-      if (entry.photoOmitted) {
-        setPhotoNote('This code used a photo style. Photos are never saved, so it was restored without one. Add the photo again to reapply it.');
-        notify('info', `Restored “${entry.label || 'code'}” without its photo (photos are never saved).`);
+      if (missing.length) {
+        const what = missing.join(' and ');
+        setPhotoNote(missing.includes('photo') ? 'This code used a photo that is no longer stored on this device, so it was restored without it. Add the photo again to reapply it.' : null);
+        notify('info', `Restored “${entry.label || 'code'}” without its ${what} (no longer stored on this device).`);
       } else {
         setPhotoNote(null);
         notify('success', `Restored “${entry.label || 'code'}” with its design.`);
@@ -183,13 +222,15 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
       .then((thumbnail) => {
         if (cancelled) return;
         // Only the small thumbnail keeps the photo look; the photo itself is never stored.
+        // Recent codes keep settings, a thumbnail and IndexedDB references, never image data.
+        const { logo, photo } = settled.style;
         remember({
           encoded: settled.encoded,
           label: describeContent(settled.content),
           content: settled.content,
-          style: { ...settled.style, photo: null },
+          style: { ...settled.style, logo: logo?.startsWith('data:') ? logo : null, photo: photo ? { ...photo, src: '' } : null },
           thumbnail,
-          photoOmitted: Boolean(settled.style.photo),
+          photoOmitted: Boolean(photo && !photo.ref),
         });
       })
       .catch(() => {
@@ -199,6 +240,19 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
       cancelled = true;
     };
   }, [settled, remember]);
+
+  // Drop stored images that no recent code (and not the current design) uses.
+  useEffect(() => {
+    const keep = new Set<string>();
+    for (const e of entries) {
+      if (e.style.logoRef) keep.add(e.style.logoRef);
+      if (e.style.photo?.ref) keep.add(e.style.photo.ref);
+    }
+    if (style.logoRef) keep.add(style.logoRef);
+    if (style.photo?.ref) keep.add(style.photo.ref);
+    const timer = window.setTimeout(() => void pruneImages(keep), 1500);
+    return () => window.clearTimeout(timer);
+  }, [entries, style.logoRef, style.photo?.ref]);
 
   // --- Downloads ------------------------------------------------------------
   const downloadPng = useCallback(
@@ -346,12 +400,12 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
               <ScanCheck style={renderStyle} warnings={warnings} active={canDownload} decode={decode} onBoost={boostReadability} boosting={boosting} />
             </div>
             <div className="studio-recent" data-panel-id="recent">
-              <RecentCodes entries={entries} activeId={activeId} onRestore={restoreEntry} onRemove={removeEntry} onClear={clearHistory} />
+              <RecentCodes entries={entries} activeId={activeId} onRestore={(entry) => void restoreEntry(entry)} onRemove={removeEntry} onClear={clearHistory} />
             </div>
           </div>
 
           <div className="studio-design" data-panel-id="design">
-            <DesignPanel style={style} previewText={encoded || PREVIEW_FALLBACK} onChange={updateStyle} onPreset={applyPreset} onReset={resetDesign} photoNote={photoNote} onPhoto={updatePhoto} />
+            <DesignPanel style={style} previewText={encoded || PREVIEW_FALLBACK} onChange={updateStyle} onPreset={applyPreset} onReset={resetDesign} photoNote={photoNote} onPhoto={updatePhoto} payloadBytes={encoded ? payloadBytes(encoded) : 0} />
           </div>
         </main>
 

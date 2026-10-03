@@ -1070,7 +1070,59 @@
   object-fit: contain;
 }
 
+/* --- Design panel tabs ---------------------------------------------------- */
+.panel-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-inset);
+}
+
+.panel-tabs__tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-weight: 650;
+}
+
+.panel-tabs__tab[aria-selected='true'] {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--elevation-1);
+}
+
+.panel-tabs__badge {
+  padding: 0 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-brand-green);
+  color: var(--color-on-brand);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 18px;
+}
+
+.panel-tabpanel {
+  display: grid;
+  gap: var(--space-6);
+}
+
 /* --- Photo style ----------------------------------------------------------- */
+.photo-style__group {
+  display: grid;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
 .photo-style {
   display: grid;
   gap: var(--space-4);
