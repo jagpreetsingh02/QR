@@ -6,8 +6,8 @@ export type CalloutTone = 'info' | 'warning' | 'danger' | 'success';
 
 const ICONS: Record<CalloutTone, IconName> = {
   info: 'info',
-  warning: 'warning',
-  danger: 'warning',
+  warning: 'alert',
+  danger: 'alert',
   success: 'check',
 };
 

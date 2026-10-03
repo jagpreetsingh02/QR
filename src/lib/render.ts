@@ -183,3 +183,20 @@ export async function renderToSvg(text: string, style: QrStyle): Promise<string>
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${style.size}" height="${style.size}" viewBox="0 0 ${style.size} ${style.size}" shape-rendering="crispEdges" role="img" aria-label="QR code">${layers.join('')}</svg>`;
 }
+
+/**
+ * Module grid at a fixed symbol version, for animated displays that morph
+ * between payloads cell by cell (all payloads then share one grid size).
+ * Additive helper: the preview and downloads keep using `buildMatrix`.
+ */
+export function moduleGrid(text: string, ecc: QrStyle['ecc'], version?: number): boolean[][] {
+  let matrix: BitMatrix;
+  try {
+    matrix = QRCode.create(text, { errorCorrectionLevel: ecc, version }).modules;
+  } catch {
+    matrix = buildMatrix(text, ecc);
+  }
+  return Array.from({ length: matrix.size }, (_, row) =>
+    Array.from({ length: matrix.size }, (_, col) => Boolean(matrix.get(row, col))),
+  );
+}

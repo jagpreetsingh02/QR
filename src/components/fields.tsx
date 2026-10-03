@@ -38,7 +38,7 @@ function FieldShell({
       {children}
       {error ? (
         <p className="field__error" id={`${id}-error`} role="alert">
-          <Icon name="warning" size={14} />
+          <Icon name="alert" size={14} />
           {error}
         </p>
       ) : hint ? (

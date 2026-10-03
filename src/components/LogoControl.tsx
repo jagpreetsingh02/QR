@@ -100,7 +100,7 @@ export function LogoControl({ logo, logoScale, onLogoChange, onScaleChange }: Lo
 
       {error ? (
         <p className="field__error" id={errorId} role="alert">
-          <Icon name="warning" size={14} />
+          <Icon name="alert" size={14} />
           {error}
         </p>
       ) : null}

@@ -35,7 +35,7 @@ export function QrPreview({
     <section className="card" aria-labelledby="preview-title">
       <div className="card__header">
         <span className="card__step" aria-hidden="true">
-          <Icon name="spark" size={14} />
+          <Icon name="sparkle" size={14} />
         </span>
         <div className="card__headings">
           <h2 className="card__title" id="preview-title">

@@ -1,0 +1,197 @@
+/* Shared UI primitives used by both the landing page and the studio. */
+
+/* --- Buttons ------------------------------------------------------------ */
+.button {
+  --button-bg: var(--color-surface);
+  --button-fg: var(--color-text);
+  --button-border: var(--color-border-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: 0 var(--space-6);
+  border: 1.5px solid var(--button-border);
+  border-radius: var(--radius-full);
+  background: var(--button-bg);
+  color: var(--button-fg);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: 0.005em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard);
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.button--primary {
+  --button-bg: var(--color-primary);
+  --button-fg: var(--color-on-primary);
+  --button-border: var(--color-primary);
+  box-shadow: var(--elevation-2);
+}
+
+.button--primary:hover:not(:disabled) {
+  --button-bg: var(--color-primary-hover);
+  --button-border: var(--color-primary-hover);
+}
+
+.button--secondary:hover:not(:disabled) {
+  --button-bg: var(--color-surface-inset);
+}
+
+.button--ghost {
+  --button-bg: transparent;
+  --button-border: transparent;
+  --button-fg: var(--color-primary);
+}
+
+.button--ghost:hover:not(:disabled) {
+  --button-bg: var(--color-primary-soft);
+}
+
+.button--sm {
+  min-height: 38px;
+  padding: 0 var(--space-4);
+  font-size: 14px;
+}
+
+.button--lg {
+  min-height: 56px;
+  padding: 0 var(--space-8);
+  font-size: 16px;
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.icon-button:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-inset);
+}
+
+/* --- Small atoms -------------------------------------------------------- */
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 7px;
+  border: 1px solid var(--color-border);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-xs);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.payload {
+  font-family: var(--font-mono);
+  font-size: var(--type-mono-size);
+  line-height: var(--type-mono-leading);
+  overflow-wrap: anywhere;
+}
+
+/* --- Brand -------------------------------------------------------------- */
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.logo-mark {
+  flex-shrink: 0;
+}
+
+.wordmark__name {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.wordmark__by {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--color-text-muted);
+}
+
+/* --- Route loading ------------------------------------------------------ */
+.route-loading {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+/* --- Morphing QR (landing hero + types showcase) ------------------------ */
+.morph-code {
+  width: 100%;
+  height: auto;
+  shape-rendering: crispEdges;
+}
+
+.morph-code__bg {
+  fill: #ffffff;
+}
+
+.morph-code__cell {
+  fill: #141927;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0.3);
+  transition:
+    opacity 220ms var(--ease-standard),
+    transform 420ms var(--ease-emphasized);
+}
+
+.morph-code.is-assembled .morph-code__cell.is-on {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .morph-code__cell {
+    transition: none;
+    transform: none;
+  }
+}

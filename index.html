@@ -1,15 +1,38 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="theme-color" content="#1a73e8" />
+    <meta name="theme-color" content="#1967D2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0A0D17" media="(prefers-color-scheme: dark)" />
+    <title>QR Studio — QR codes that actually scan</title>
     <meta
       name="description"
-      content="QR Studio — generate, customise and download QR codes for URLs, text, email, phone numbers and Wi-Fi. Runs entirely in your browser."
+      content="Design QR codes for URLs, text, email, phone and Wi-Fi in seconds. Payloads encoded to spec, a scan check that warns before a code fails, PNG and SVG downloads. Runs entirely in your browser. Built for GDG on Campus SRM."
     />
-    <title>QR Studio — QR Code Generator &amp; Designer</title>
+    <link rel="canonical" href="https://qr-studio-jagpreet-singh1.vercel.app/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="QR Studio" />
+    <meta property="og:title" content="QR Studio — QR codes that actually scan" />
+    <meta property="og:description" content="Encoded to spec, checked before it fails, nothing leaves your device. Built for GDG on Campus SRM." />
+    <meta property="og:url" content="https://qr-studio-jagpreet-singh1.vercel.app/" />
+    <meta property="og:image" content="https://qr-studio-jagpreet-singh1.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="QR Studio: the headline 'QR codes that actually scan.' beside a live QR code on a blue shape." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="QR Studio — QR codes that actually scan" />
+    <meta name="twitter:description" content="Encoded to spec, checked before it fails, nothing leaves your device." />
+    <meta name="twitter:image" content="https://qr-studio-jagpreet-singh1.vercel.app/og-image.png" />
+    <script>
+      // Apply the saved or system theme before first paint to avoid a flash.
+      try {
+        var t = localStorage.getItem('qr-studio:theme:v1');
+        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
