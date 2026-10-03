@@ -192,12 +192,19 @@ than taste. The full record is in [docs/design-brief.md](docs/design-brief.md).
 
 ## Quality
 
-Lighthouse, mobile profile, production build:
+Lighthouse 13.5.0, mobile profile, measured on 4 October 2026 against the deployed production
+build at `https://qr-studio-two-bay.vercel.app` (three runs per route, identical each time):
 
 | Route | Performance | Accessibility | Best practices | SEO |
 | --- | --- | --- | --- | --- |
-| `/` | 95 | 100 | 100 | 100 |
-| `/studio` | 95 | 100 | 100 | 100 |
+| `/` | 99 | 100 | 100 | 100 |
+| `/studio` | 99 | 100 | 100 | 100 |
+
+The same build is served at the documented link above, but Vercel adds an automatic
+`x-robots-tag: noindex` header to that `.vercel.app` alias, which fails Lighthouse's
+"is crawlable" audit: measured there on the same day, SEO is 69 on `/` and 58 on `/studio`
+(`/studio` also loses the canonical audit, since the SPA serves one `index.html` whose canonical
+points at `/`). Performance, accessibility and best practices are unaffected.
 
 - **Accessibility:** WCAG 2.2 AA contrast in both themes (token pairs measured, not eyeballed),
   skip link, landmarks, one `h1` per route, radio groups and tabs with full keyboard support,
@@ -205,14 +212,16 @@ Lighthouse, mobile profile, production build:
 - **Motion:** one authored moment per surface (the hero code assembling and morphing; the studio
   preview reacting), shared duration and easing tokens, nothing that delays interaction.
 - **Bundle:** before the redesign the app shipped one 278 kB JS chunk (89 kB gzipped). Now the
-  landing page's initial JS is about 267 kB (87 kB gzipped) despite the added page; the studio
-  (33 kB), the below-the-fold sections and Motion's feature bundle load lazily, and the studio is
-  prefetched when the browser is idle so it opens instantly and keeps working if the connection drops.
+  landing page's initial JS is 264 kB (85.5 kB gzipped) despite the added page; the studio
+  (48 kB, 15.5 kB gzipped), the below-the-fold sections and Motion's feature bundle load lazily,
+  and the studio is prefetched when the browser is idle so it opens instantly and keeps working if
+  the connection drops. Sizes are the files `dist/index.html` actually requests, in KiB, gzipped at
+  level 9; `npm run build` prints the same files in 1000-byte kB, so its numbers read slightly higher.
 
 ## Testing
 
 ```bash
-npm run test:e2e        # builds, serves dist/ with vite preview, runs 148 checks in Chromium
+npm run test:e2e        # builds, serves dist/ with vite preview, runs 152 checks in Chromium
 E2E_URL=https://qr-studio-jagpreet-singh1.vercel.app node tests/e2e.mjs   # test any running site
 ```
 
@@ -294,7 +303,7 @@ src/
                         RecentCodes, Toast
   styles/               tokens.css (generated), base.css, ui.css, landing.css, studio.css
   router.ts, Link.tsx   Two-route History-API router
-tests/                  e2e.mjs (148 checks) and fixtures.mjs (synthetic test images)
+tests/                  e2e.mjs (152 checks) and fixtures.mjs (synthetic test images)
 ```
 
 ## Important design decisions
