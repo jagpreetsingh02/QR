@@ -48,5 +48,8 @@ export function useHistory() {
 
   const clear = useCallback(() => setEntries([]), []);
 
-  return { entries, remember, remove, clear };
+  /** Puts back a previous list, used by the undo action after a clear or remove. */
+  const restore = useCallback((previous: HistoryEntry[]) => setEntries(previous.slice(0, HISTORY_LIMIT)), []);
+
+  return { entries, remember, remove, clear, restore };
 }

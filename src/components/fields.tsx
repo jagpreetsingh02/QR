@@ -1,6 +1,8 @@
 import { useId } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
+import * as m from 'motion/react-m';
 import { Icon } from './Icon';
+import { useRovingRadio } from '../hooks/useRovingRadio';
 
 interface BaseFieldProps {
   label: string;
@@ -36,24 +38,23 @@ function FieldShell({
         {optional ? <span className="field__optional">optional</span> : null}
       </label>
       {children}
-      {error ? (
-        <p className="field__error" id={`${id}-error`} role="alert">
-          <Icon name="alert" size={14} />
-          {error}
-        </p>
-      ) : hint ? (
-        <p className="field__hint" id={`${id}-hint`}>
-          {hint}
-        </p>
-      ) : null}
+      {/* One message slot that always exists: errors replace hints in place, so nothing jumps. */}
+      <p className={`field__message${error ? ' is-error' : ''}`} id={`${id}-message`} aria-live="polite">
+        {error ? (
+          <>
+            <Icon name="alert" size={15} />
+            <span>{error}</span>
+          </>
+        ) : (
+          hint
+        )}
+      </p>
     </div>
   );
 }
 
 function describedBy(id: string, error?: string, hint?: string): string | undefined {
-  if (error) return `${id}-error`;
-  if (hint) return `${id}-hint`;
-  return undefined;
+  return error || hint ? `${id}-message` : undefined;
 }
 
 export function TextField({
@@ -217,27 +218,34 @@ export function SegmentedField<T extends string>({
 }: {
   label: string;
   value: T;
-  options: ReadonlyArray<{ value: T; label: string; title?: string }>;
+  options: ReadonlyArray<{ value: T; label: string; detail?: string; title?: string }>;
   onChange: (value: T) => void;
   hint?: string;
 }) {
+  const id = useId();
+  const { onKeyDown, itemProps } = useRovingRadio(
+    options.map((o) => o.value),
+    value,
+    onChange,
+  );
   return (
     <div className="field">
-      <div className="slider__head">
-        <span id={`${label}-legend`}>{label}</span>
-      </div>
-      <div className="segmented" role="radiogroup" aria-labelledby={`${label}-legend`}>
-        {options.map((option) => (
+      <span className="field__label" id={`${id}-legend`}>
+        {label}
+      </span>
+      <div className="segmented" role="radiogroup" aria-labelledby={`${id}-legend`} onKeyDown={onKeyDown}>
+        {options.map((option, i) => (
           <button
             key={option.value}
             type="button"
-            role="radio"
-            aria-checked={value === option.value}
+            {...itemProps(i)}
             title={option.title}
             className="segmented__option"
             onClick={() => onChange(option.value)}
           >
-            {option.label}
+            {value === option.value ? <m.span layoutId={`${id}-thumb`} className="segmented__thumb" /> : null}
+            <span className="segmented__label">{option.label}</span>
+            {option.detail ? <span className="segmented__detail">{option.detail}</span> : null}
           </button>
         ))}
       </div>
