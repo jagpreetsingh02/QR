@@ -262,6 +262,12 @@
   font-weight: 700;
 }
 
+@media (max-width: 520px) {
+  .lp-stage__payload {
+    max-width: 72%;
+  }
+}
+
 .lp-stage__payload code {
   white-space: nowrap;
   overflow: hidden;
@@ -748,6 +754,13 @@
   background: var(--color-brand-green);
 }
 
+.lp-scan__frame[data-status='warn'] { background: var(--color-brand-yellow); }
+.lp-scan__frame[data-status='bad'] { background: var(--color-brand-red); }
+
+.lp-scan__frame {
+  transition: background-color var(--duration-slow) var(--ease-standard);
+}
+
 .lp-scan__frame svg {
   width: 100%;
   height: auto;
@@ -915,8 +928,8 @@
   }
 }
 
-/* --- How it works ------------------------------------------------------- */
-.lp-how__steps {
+/* --- How it works: a flow made of the studio's own pieces ------------------- */
+.lp-flow {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: var(--space-8);
@@ -924,31 +937,86 @@
   padding: 0;
 }
 
-.lp-how__step {
+.lp-flow__step {
   display: grid;
   gap: var(--space-3);
   align-content: start;
 }
 
-.lp-how__step p {
+.lp-flow__step p {
   color: var(--color-text-muted);
 }
 
-.lp-how__num {
+.lp-flow__visual {
   display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 18px;
-  background: var(--color-brand-blue);
-  color: var(--color-on-brand);
-  font-family: var(--font-display);
-  font-size: 26px;
-  font-weight: 800;
+  gap: var(--space-3);
+  align-content: center;
+  height: 148px;
+  padding: var(--space-5);
+  margin-bottom: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
 }
 
-.lp-how__step[data-tone='1'] .lp-how__num { background: var(--color-brand-red); }
-.lp-how__step[data-tone='2'] .lp-how__num { background: var(--color-brand-yellow); }
+.lp-flow__types,
+.lp-flow__presets {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.lp-flow__type {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: var(--color-brand-blue);
+  color: var(--color-on-brand);
+}
+
+.lp-flow__type[data-type='text'] { background: var(--color-text-muted); color: var(--color-surface); }
+.lp-flow__type[data-type='email'] { background: var(--color-brand-red); }
+.lp-flow__type[data-type='phone'] { background: var(--color-brand-green); }
+.lp-flow__type[data-type='wifi'] { background: var(--color-brand-yellow); }
+
+.lp-flow__field {
+  padding: var(--space-2) var(--space-3);
+  border: 1.5px solid var(--color-focus);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+}
+
+.lp-flow__preset {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.lp-flow__verdict,
+.lp-flow__file {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  justify-self: start;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.lp-flow__verdict {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.lp-flow__file {
+  background: var(--color-surface-inset);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 12.5px;
+}
 
 /* --- FAQ ---------------------------------------------------------------- */
 .lp-faq__grid {

@@ -23,9 +23,11 @@ export function usePathname(): string {
   );
 }
 
-function scrollToHash(hash: string): void {
+/** Scrolls to an anchor, waiting briefly for lazily rendered sections to mount. */
+function scrollToHash(hash: string, attempts = 40): void {
   const target = hash ? document.getElementById(decodeURIComponent(hash.slice(1))) : null;
   if (target) target.scrollIntoView();
+  else if (hash && attempts > 0) window.setTimeout(() => scrollToHash(hash, attempts - 1), 50);
   else window.scrollTo(0, 0);
 }
 

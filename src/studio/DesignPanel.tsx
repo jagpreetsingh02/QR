@@ -1,5 +1,6 @@
 import type { EccLevel, QrStyle } from '../types';
 import { contrastRatio } from '../lib/colour';
+import { MIN_SAFE_CONTRAST } from '../lib/scanAdvice';
 import { PRESETS, matchPreset } from '../lib/presets';
 import type { Preset } from '../lib/presets';
 import { ColourField } from '../components/ColourField';
@@ -26,6 +27,8 @@ interface DesignPanelProps {
 
 export function DesignPanel({ style, previewText, onChange, onPreset, onReset }: DesignPanelProps) {
   const active = matchPreset(style);
+  const ratio = contrastRatio(style.foreground, style.background);
+  const ratioStatus = ratio >= MIN_SAFE_CONTRAST ? 'ok' : ratio >= 3 ? 'warn' : 'bad';
 
   return (
     <section className="panel design-panel" aria-labelledby="design-title">
@@ -51,10 +54,10 @@ export function DesignPanel({ style, previewText, onChange, onPreset, onReset }:
               className="preset"
               aria-pressed={active?.id === p.id}
               onClick={() => onPreset(p)}
-              title={`${p.name}: ${contrastRatio(p.foreground, p.background).toFixed(1)}:1 contrast`}
             >
               <QrSvg className="preset__code" text={previewText} foreground={p.foreground} background={p.background} margin={2} ecc={style.ecc} />
               <span className="preset__name">{p.name}</span>
+              <span className="preset__ratio">{contrastRatio(p.foreground, p.background).toFixed(1)}:1</span>
             </button>
           ))}
         </div>
@@ -74,6 +77,16 @@ export function DesignPanel({ style, previewText, onChange, onPreset, onReset }:
           </button>
           <ColourField label="Background" value={style.background} onChange={(background) => onChange({ background })} />
         </div>
+        <p className="contrast-readout" data-status={ratioStatus} aria-live="polite">
+          <span className="contrast-readout__value">{ratio.toFixed(1)}:1</span>
+          <span>
+            {ratioStatus === 'ok'
+              ? 'contrast, comfortably scannable'
+              : ratioStatus === 'warn'
+                ? `contrast, below ${MIN_SAFE_CONTRAST}:1, may fail in poor light`
+                : 'contrast, most scanners will not read this'}
+          </span>
+        </p>
       </div>
 
       <div className="panel-group">

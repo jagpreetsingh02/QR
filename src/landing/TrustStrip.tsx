@@ -3,7 +3,7 @@ const FACTS = [
   ['PNG + SVG', 'pixel-exact or lossless'],
   ['No sign-up', 'open it and start'],
   ['No server', 'encoded in this tab'],
-  ['Works offline', 'once the page has loaded'],
+  ['Offline-friendly', 'keeps working if the connection drops'],
 ] as const;
 
 export function TrustStrip() {

@@ -16,6 +16,7 @@ import { Icon } from '../components/Icon';
 import type { IconName } from '../components/Icon';
 import { MotionProvider } from '../components/MotionProvider';
 import { Logo } from '../components/brand/Logo';
+import { Link } from '../Link';
 import { ThemeToggle } from '../components/brand/ThemeToggle';
 import { TypePicker } from './TypePicker';
 import { Stage } from './Stage';
@@ -24,6 +25,7 @@ import { ScanCheck } from './ScanCheck';
 import { DesignPanel } from './DesignPanel';
 import { RecentCodes } from './RecentCodes';
 import { Toast } from './Toast';
+import { getVerdict } from './readings';
 import type { ToastMessage } from './Toast';
 import '../styles/studio.css';
 
@@ -51,8 +53,21 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
   const [style, setStyle] = useState<QrStyle>(DEFAULT_STYLE);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [panel, setPanel] = useState<Panel>('content');
+  // Errors appear once a type's fields have been touched, not on first load.
+  const [touched, setTouched] = useState<Partial<Record<QrType, boolean>>>({});
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const toastId = useRef(0);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // Publishes the pinned stage's height so the mobile tabs can pin right under it.
+  useEffect(() => {
+    const root = rootRef.current;
+    const stage = root?.querySelector<HTMLElement>('.stage');
+    if (!root || !stage || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(([entry]) => root.style.setProperty('--stage-h', `${Math.round(entry.borderBoxSize?.[0]?.blockSize ?? stage.offsetHeight)}px`));
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, []);
 
   const content = drafts[type];
   const errors = useMemo(() => validateContent(content), [content]);
@@ -70,6 +85,7 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
 
   const updateContent = useCallback((next: QrContent) => {
     setActiveId(null);
+    setTouched((current) => (current[next.type] ? current : { ...current, [next.type]: true }));
     setDrafts((current) => ({ ...current, [next.type]: next }));
   }, []);
 
@@ -90,6 +106,7 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
       setType(entry.content.type);
       setDrafts((current) => ({ ...current, [entry.content.type]: entry.content }));
       setStyle(entry.style);
+      setTouched((current) => ({ ...current, [entry.content.type]: true }));
       setActiveId(entry.id);
       setPanel('content');
       notify('success', `Restored “${entry.label || 'code'}” with its design.`);
@@ -199,20 +216,38 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
         event.preventDefault();
         void downloadPng();
       }
+      // Cmd/Ctrl+Z runs the pending Undo, but never steals undo from a text field.
+      const inField = event.target instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName);
+      if (event.key.toLowerCase() === 'z' && (event.metaKey || event.ctrlKey) && !event.shiftKey && !inField && toast?.action) {
+        event.preventDefault();
+        toast.action.run();
+        setToast(null);
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [downloadPng, isRendered]);
+  }, [downloadPng, isRendered, toast]);
 
-  const firstError = Object.values(errors)[0] ?? null;
+  const shownErrors = touched[type] ? errors : {};
+  const firstError = Object.values(shownErrors)[0] ?? null;
   const canDownload = isRendered && !renderError;
+  const verdict = canDownload ? getVerdict(style, warnings) : null;
+  const showScanCheck = useCallback(() => {
+    const target = document.getElementById('scan-check');
+    target?.scrollIntoView({ block: 'start' });
+    target?.focus({ preventScroll: true });
+  }, []);
 
   return (
     <MotionProvider>
-      <div className="studio" data-panel={panel}>
+      <div className="studio" data-panel={panel} ref={rootRef}>
         <header className="studio-bar">
           <Logo />
           <div className="studio-bar__actions">
+            <Link to="/#faq" className="studio-bar__help" aria-label="Help">
+              <Icon name="info" size={18} />
+              <span>Help</span>
+            </Link>
             <span className="studio-bar__shortcut">
               <kbd className="kbd">{isMac ? '⌘' : 'Ctrl'}</kbd>
               <kbd className="kbd">↵</kbd>
@@ -248,12 +283,12 @@ export default function Studio({ theme, toggleTheme }: { theme: Theme; toggleThe
                 setActiveId(null);
               }}
             />
-            <ContentForm content={content} errors={errors} onChange={updateContent} />
+            <ContentForm content={content} errors={shownErrors} onChange={updateContent} />
           </section>
 
           <div className="studio-center">
             <div className="studio-stage-col">
-              <Stage canvasRef={canvasRef} style={style} content={content} encoded={encoded} isRendered={isRendered} renderError={renderError} formMessage={firstError} />
+              <Stage canvasRef={canvasRef} style={style} content={content} encoded={encoded} isRendered={isRendered} renderError={renderError} formMessage={firstError} verdict={verdict} onVerdict={showScanCheck} />
               <div className="studio-export">
                 <ExportBar disabled={!canDownload} onPng={downloadPng} onSvg={downloadSvg} onCopy={copyImage} />
               </div>

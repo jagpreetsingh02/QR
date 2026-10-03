@@ -5,6 +5,7 @@ import { QR_TYPE_META } from '../lib/qrContent';
 import { payloadBytes } from '../lib/validation';
 import { Icon } from '../components/Icon';
 import { maskPayload } from './payload';
+import type { Verdict } from './readings';
 
 interface StageProps {
   canvasRef: RefObject<HTMLCanvasElement | null>;
@@ -14,6 +15,8 @@ interface StageProps {
   isRendered: boolean;
   renderError: string | null;
   formMessage: string | null;
+  verdict: Verdict | null;
+  onVerdict: () => void;
 }
 
 /** A ghost code: drawn absence for the empty and error states. */
@@ -35,7 +38,7 @@ function GhostModules() {
   );
 }
 
-export function Stage({ canvasRef, style, content, encoded, isRendered, renderError, formMessage }: StageProps) {
+export function Stage({ canvasRef, style, content, encoded, isRendered, renderError, formMessage, verdict, onVerdict }: StageProps) {
   const [reveal, setReveal] = useState(false);
   const label = QR_TYPE_META[content.type].label;
   const shown = reveal ? encoded : maskPayload(encoded, content);
@@ -58,6 +61,14 @@ export function Stage({ canvasRef, style, content, encoded, isRendered, renderEr
             </div>
           ) : null}
         </div>
+        {verdict ? (
+          <button type="button" className="stage__verdict" data-status={verdict.status} onClick={onVerdict}>
+            <Icon name={verdict.status === 'ok' ? 'check-circle' : 'alert'} size={16} />
+            <span>
+              <strong>{verdict.title}</strong> · {verdict.detail}
+            </span>
+          </button>
+        ) : null}
       </div>
 
       {isRendered ? (

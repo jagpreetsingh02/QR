@@ -151,6 +151,7 @@ await section('landing', async () => {
 await section('types', async () => {
   await page.goto(`${base}/studio`, { waitUntil: 'networkidle' });
   check('studio has exactly one h1', (await page.locator('h1').count()) === 1);
+  check('no error shown before anything is typed', (await page.locator('.field__message.is-error').count()) === 0);
 
   await page.getByLabel('Website URL').fill('gdg.community.dev/gdg-on-campus-srm');
   await settle();
@@ -265,6 +266,8 @@ await section('customisation', async () => {
   await settle(400);
   check('low contrast raises a warning', (await page.locator('.advice[data-level="warning"]').count()) > 0);
   check('contrast reading flags the risk', (await page.locator('.reading').first().getAttribute('data-status')) === 'bad');
+  check('stage verdict pill summarises the risk', (await page.locator('.stage__verdict').getAttribute('data-status')) === 'bad' && (await page.locator('.stage__verdict').innerText()).includes('won’t scan'));
+  check('contrast readout next to the pickers', (await page.locator('.contrast-readout').getAttribute('data-status')) === 'bad');
   check('download stays enabled despite the warning', await page.getByRole('button', { name: 'Download PNG' }).isEnabled());
 
   await page.getByRole('button', { name: 'Midnight' }).click();
@@ -279,9 +282,10 @@ await section('customisation', async () => {
   await page.getByRole('button', { name: 'Reset' }).click();
   await settle(300);
   check('reset design restores defaults', (await page.getByLabel('Size', { exact: true }).inputValue()) === '320');
-  await page.getByRole('button', { name: 'Undo' }).click();
+  await page.locator('body').click({ position: { x: 5, y: 300 } });
+  await page.keyboard.press('Control+z');
   await settle(300);
-  check('reset can be undone', (await page.getByLabel('Size', { exact: true }).inputValue()) === '512');
+  check('reset can be undone with Ctrl+Z', (await page.getByLabel('Size', { exact: true }).inputValue()) === '512');
 });
 
 // ------------------------------------------------------------- downloads --

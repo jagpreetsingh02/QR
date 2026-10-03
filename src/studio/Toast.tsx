@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 import * as m from 'motion/react-m';
 import { Icon } from '../components/Icon';
@@ -11,11 +11,13 @@ export interface ToastMessage {
 }
 
 export function Toast({ toast, onDismiss }: { toast: ToastMessage | null; onDismiss: () => void }) {
+  // Hovering or focusing the toast pauses it, so Undo is never a race (WCAG 2.2.1).
+  const [held, setHeld] = useState(false);
   useEffect(() => {
-    if (!toast) return;
-    const timer = window.setTimeout(onDismiss, toast.action ? 6000 : 2800);
+    if (!toast || held) return;
+    const timer = window.setTimeout(onDismiss, toast.action ? 10000 : 3200);
     return () => window.clearTimeout(timer);
-  }, [toast, onDismiss]);
+  }, [toast, onDismiss, held]);
 
   return (
     <div className="toast-region" role="status" aria-live="polite">
@@ -29,6 +31,10 @@ export function Toast({ toast, onDismiss }: { toast: ToastMessage | null; onDism
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.24, ease: [0.05, 0.7, 0.1, 1] }}
+            onMouseEnter={() => setHeld(true)}
+            onMouseLeave={() => setHeld(false)}
+            onFocus={() => setHeld(true)}
+            onBlur={() => setHeld(false)}
           >
             <Icon name={toast.tone === 'error' ? 'alert' : toast.tone === 'info' ? 'info' : 'check-circle'} size={18} />
             <span>{toast.message}</span>
@@ -42,6 +48,7 @@ export function Toast({ toast, onDismiss }: { toast: ToastMessage | null; onDism
                 }}
               >
                 {toast.action.label}
+                <kbd className="toast__kbd">{/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘Z' : 'Ctrl+Z'}</kbd>
               </button>
             ) : null}
           </m.div>

@@ -81,7 +81,7 @@ export function ScanSection() {
         </div>
 
         <div className="lp-scan__stage">
-          <div className="lp-scan__frame" data-margin={margin}>
+          <div className="lp-scan__frame" data-status={warnings.some((w) => w.id === 'contrast-critical' || (w.id === 'quiet-zone' && w.level === 'warning')) ? 'bad' : warnings.some((w) => w.level === 'warning') ? 'warn' : 'ok'}>
             <QrSvg text={PAYLOAD} foreground={foreground} background={PAPER} margin={margin} title={`Demo QR code at ${ratio.toFixed(1)} to 1 contrast`} />
           </div>
           <p className="lp-scan__caption">Downloads are never blocked; the choice stays yours.</p>
