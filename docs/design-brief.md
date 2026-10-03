@@ -40,7 +40,7 @@ a live, engine-rendered QR code as the hero object.
   assembling and morphing between payloads; in the studio it is the preview reacting to changes.
   Everything honours `prefers-reduced-motion`.
 
-Process: Impeccable `shape` → `init` (PRODUCT.md) → direction rounds (assigned roll, two bolder
+Process: Impeccable `shape` → `init` ([PRODUCT.md](PRODUCT.md)) → direction rounds (assigned roll, two bolder
 re-rolls, a steered fresh hand, then the safer register, from which this direction was chosen).
 
 ## Avoid

@@ -1,11 +1,11 @@
 /**
- * Regenerates the README screenshots in docs/ from a running build.
- *   npx vite preview --port 4180 &  node tests/screenshots.mjs [baseUrl]
+ * Regenerates the README screenshots in docs/screenshots/ from a running build.
+ *   npm run build && npx vite preview --port 4180 &  npm run screenshots
  */
 import { chromium } from 'playwright';
 import os from 'node:os';
 import path from 'node:path';
-import { writeFacePhoto, writeTestPhoto } from './fixtures.mjs';
+import { writeFacePhoto, writeTestPhoto } from '../tests/fixtures.mjs';
 
 const testPhoto = writeTestPhoto(path.join(os.tmpdir(), 'qr-studio-photo.png'));
 const facePhoto = writeFacePhoto(path.join(os.tmpdir(), 'qr-studio-face.png'));
@@ -67,8 +67,8 @@ for (const s of shots) {
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(500);
   }
-  await page.screenshot({ path: `docs/${s.file}`, fullPage: Boolean(s.full) });
+  await page.screenshot({ path: `docs/screenshots/${s.file}`, fullPage: Boolean(s.full) });
   await context.close();
-  console.log('wrote docs/' + s.file);
+  console.log('wrote docs/screenshots/' + s.file);
 }
 await browser.close();

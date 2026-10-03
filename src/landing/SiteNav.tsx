@@ -7,6 +7,7 @@ import { Icon } from '../components/Icon';
 const SECTIONS = [
   ['types', 'Types'],
   ['design', 'Design'],
+  ['photo', 'Photo QR'],
   ['scan-check', 'Scan check'],
   ['privacy', 'Privacy'],
   ['faq', 'FAQ'],

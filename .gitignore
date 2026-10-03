@@ -26,3 +26,12 @@ dist-ssr
 # Vercel
 .vercel
 .env*
+
+# Design-tool working state (Impeccable)
+.impeccable
+
+# Claude Code local settings
+.claude
+
+# Reference material kept locally, not part of the project
+Motion-Graphics-with-Claude-Code.pdf

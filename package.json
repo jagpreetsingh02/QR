@@ -1,7 +1,14 @@
 {
-  "name": "qr",
+  "name": "qr-studio",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "QR Studio: design QR codes for URLs, text, email, phone and Wi-Fi, with a scan check and halftone photo QR. Runs entirely in the browser. Built for GDG on Campus SRM.",
+  "author": "Jagpreet Singh (https://github.com/jagpreetsingh02)",
+  "homepage": "https://qr-studio-jagpreet-singh1.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jagpreetsingh02/QR.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +16,11 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test:e2e": "vite build && node tests/e2e.mjs",
-    "tokens": "node design/build-tokens.mjs"
+    "tokens": "node design/build-tokens.mjs",
+    "screenshots": "node scripts/screenshots.mjs",
+    "og-image": "node scripts/og-image.mjs",
+    "landing-assets": "node scripts/landing-assets.mjs",
+    "demo-encode": "node scripts/encode-demo.mjs"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",

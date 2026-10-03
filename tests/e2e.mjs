@@ -144,6 +144,38 @@ await section('landing', async () => {
   await faq.click();
   check('FAQ accordion expands', (await faq.getAttribute('aria-expanded')) === 'true');
 
+  // Photo QR showcase: each example is a real code that decodes.
+  await page.locator('#photo').scrollIntoViewIfNeeded();
+  await settle(600);
+  const showcase = await page.evaluate(async () => {
+    const out = [];
+    for (const img of document.querySelectorAll('.lp-photo__example img')) {
+      const probe = new Image();
+      probe.src = img.currentSrc || img.src;
+      await probe.decode();
+      const c = document.createElement('canvas');
+      c.width = probe.width;
+      c.height = probe.height;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(probe, 0, 0);
+      out.push({ w: c.width, h: c.height, d: Array.from(ctx.getImageData(0, 0, c.width, c.height).data) });
+    }
+    return out;
+  });
+  check('landing photo QR showcase has three examples', showcase.length === 3);
+  check('every photo QR showcase example decodes', showcase.length > 0 && showcase.every((x) => jsQR(Uint8ClampedArray.from(x.d), x.w, x.h)?.data === 'https://gdg.community.dev'));
+
+  // Demo video: present, muted, not preloaded up front, and its files are served.
+  const video = await page.evaluate(async () => {
+    const v = document.querySelector('.lp-demo__video');
+    if (!v) return null;
+    const sources = [...v.querySelectorAll('source')].map((s) => s.src);
+    const ok = await Promise.all([...sources, v.poster].map((u) => fetch(u, { method: 'HEAD' }).then((r) => r.ok && Number(r.headers.get('content-length') ?? 1) > 0)));
+    return { muted: v.muted, controls: v.controls, sources: sources.length, ok: ok.every(Boolean) };
+  });
+  check('landing demo video is muted with controls', video?.muted === true && video?.controls === true);
+  check('landing demo video files are served', video?.sources === 2 && video?.ok === true);
+
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.getByRole('link', { name: /Create a QR code/ }).click();
   await page.getByLabel('Website URL').waitFor();

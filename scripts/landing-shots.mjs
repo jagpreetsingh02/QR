@@ -1,5 +1,7 @@
+// Full-page landing captures (desktop, mobile, dark) for design review, plus an overflow check.
 import { chromium } from 'playwright';
-const OUT = process.env.OUT ?? 'docs';
+import os from 'node:os';
+const OUT = process.env.OUT ?? os.tmpdir();
 const url = process.argv[2] ?? 'http://localhost:5178/';
 const b = await chromium.launch();
 const errors = [];

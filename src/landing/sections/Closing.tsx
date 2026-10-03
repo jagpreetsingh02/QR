@@ -4,6 +4,7 @@ import { LogoMark } from '../../components/brand/Logo';
 
 export const REPO_URL = 'https://github.com/jagpreetsingh02/QR';
 export const LIVE_URL = 'https://qr-studio-jagpreet-singh1.vercel.app';
+export const AUTHOR_URL = 'https://github.com/jagpreetsingh02';
 
 export function FinalCta() {
   return (
@@ -35,6 +36,11 @@ export function SiteFooter() {
             <strong>QR Studio</strong> · Built for <strong>GDG on Campus SRM</strong>
             <br />
             Technical Recruitment 2026-27 · Frontend Task 1
+            <br />
+            Designed and built by{' '}
+            <a className="lp-footer__author" href={AUTHOR_URL} target="_blank" rel="noreferrer author">
+              Jagpreet Singh
+            </a>
           </p>
         </div>
         <ul className="lp-footer__links">

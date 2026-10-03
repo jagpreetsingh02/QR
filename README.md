@@ -4,9 +4,11 @@
 
 **Live:** https://qr-studio-jagpreet-singh1.vercel.app · **Studio:** https://qr-studio-jagpreet-singh1.vercel.app/studio
 
-Built for **GDG on Campus SRM** — Technical Recruitment 2026-27, Frontend Task 1 (QR Code Generator & Designer).
+Designed and built by **[Jagpreet Singh](https://github.com/jagpreetsingh02)** for **GDG on Campus SRM** — Technical Recruitment 2026-27, Frontend Task 1 (QR Code Generator & Designer).
 
-![QR Studio landing page](docs/landing.png)
+![QR Studio landing page](docs/screenshots/landing.png)
+
+**28-second motion tour:** [public/demo/qr-studio-demo.mp4](public/demo/qr-studio-demo.mp4) (also on the landing page).
 
 ---
 
@@ -15,8 +17,9 @@ Built for **GDG on Campus SRM** — Technical Recruitment 2026-27, Frontend Task
 QR Studio is a browser-only QR code generator and designer. It has two routes:
 
 - **`/` — the landing page.** Explains the product by demonstrating it: a live hero code that
-  morphs between payloads, a types showcase that prints the exact encoded string, a scan-check
-  demo driven by the real advisor, and a privacy explainer.
+  morphs between payloads, a 28-second motion tour, a types showcase that prints the exact encoded
+  string, a Photo QR showcase of real codes (each one decodes), a scan-check demo driven by the real
+  advisor, and a privacy explainer.
 - **`/studio` — the tool.** Pick a type, fill it in, design it, read the scan check, download.
 
 There is no backend. Every payload is encoded and every image is rendered in the tab, which
@@ -100,11 +103,11 @@ Images never leave the device and never go in the URL.
 
 | Dots, light | Dots, dark | Mobile |
 | --- | --- | --- |
-| ![Photo QR with dots, light theme](docs/photo-dots-light.png) | ![Photo QR with dots, dark theme](docs/photo-dots-dark.png) | ![Photo QR on mobile](docs/photo-mobile.png) |
+| ![Photo QR with dots, light theme](docs/screenshots/photo-dots-light.png) | ![Photo QR with dots, dark theme](docs/screenshots/photo-dots-dark.png) | ![Photo QR on mobile](docs/screenshots/photo-mobile.png) |
 
 | Tinted | Underlay |
 | --- | --- |
-| ![Tinted photo style](docs/photo-tint.png) | ![Underlay photo style](docs/photo-underlay.png) |
+| ![Tinted photo style](docs/screenshots/photo-tint.png) | ![Underlay photo style](docs/screenshots/photo-underlay.png) |
 
 All screenshots and test photos are synthetic images drawn by [`tests/fixtures.mjs`](tests/fixtures.mjs)
 (a cartoon face, colour bands, a landscape, a checkerboard). No personal photos are used.
@@ -144,14 +147,18 @@ ZBar 2/9 vs 3/9 in the comparison run), so it is not in the app.
 
 | Studio — light | Studio — dark |
 | --- | --- |
-| ![Studio, light theme](docs/desktop-light.png) | ![Studio, dark theme](docs/desktop-dark.png) |
+| ![Studio, light theme](docs/screenshots/desktop-light.png) | ![Studio, dark theme](docs/screenshots/desktop-dark.png) |
 
 | Tablet | Mobile | Landing — mobile, dark |
 | --- | --- | --- |
-| ![Studio on tablet](docs/tablet.png) | ![Studio on mobile](docs/mobile.png) | ![Landing on mobile](docs/landing-mobile.png) |
+| ![Studio on tablet](docs/screenshots/tablet.png) | ![Studio on mobile](docs/screenshots/mobile.png) | ![Landing on mobile](docs/screenshots/landing-mobile.png) |
 
-Full landing page: [docs/landing-full.png](docs/landing-full.png). Regenerate all of them with
-`node tests/screenshots.mjs` against a running build.
+To rebuild the motion tour: `cd video/promo && npx hyperframes render -o renders/master.mp4`, then
+`npm run demo-encode` from the repo root. The Photo QR
+showcase images come from `npm run landing-assets`.
+
+Full landing page: [docs/screenshots/landing-full.png](docs/screenshots/landing-full.png). Regenerate all of them with
+`npm run screenshots` against a running build (`npx vite preview --port 4180`).
 
 ---
 
@@ -164,7 +171,7 @@ than taste. The full record is in [docs/design-brief.md](docs/design-brief.md).
    heuristic design review and a mechanical detector). It scored 24/40 and named three P1s: the
    preview disappeared on mobile, the scan advisor was buried, and the look could belong to any
    product. Each of those has a specific answer in the new design.
-2. **Product truth first:** Impeccable `init` produced [PRODUCT.md](PRODUCT.md) (users, positioning,
+2. **Product truth first:** Impeccable `init` produced [docs/PRODUCT.md](docs/PRODUCT.md) (users, positioning,
    constraints, what must never be claimed).
 3. **Direction rounds:** Impeccable dealt competing visual directions on a decision page. After two
    bolder re-rolls and a steered hand, the direction chosen from the safer register was
@@ -180,7 +187,7 @@ than taste. The full record is in [docs/design-brief.md](docs/design-brief.md).
 5. **Build, then audit:** Lighthouse, a measured contrast pass (806 rendered text elements, both
    themes), the detector, and a second two-reviewer critique of the finished pages (studio 29/40,
    up from 24) drove the fixes listed in the commit history.
-6. **Documented:** [DESIGN.md](DESIGN.md) records the built system (tokens, type, components,
+6. **Documented:** [docs/DESIGN.md](docs/DESIGN.md) records the built system (tokens, type, components,
    layout, motion and named rules) for whoever works on it next.
 
 ## Quality
@@ -268,17 +275,26 @@ turn it off under Project → Settings → Deployment Protection for the link to
 
 ```
 design/                 Token source + generators for tokens.css and the Figma file
-docs/                   Design brief and screenshots
+docs/
+  DESIGN.md             The built design system (tokens, type, components, rules)
+  PRODUCT.md            Product truth: users, positioning, principles
+  design-brief.md       How the design was reached
+  screenshots/          README screenshots (synthetic content only)
+public/                 Favicon, Open Graph image, robots.txt, sitemap.xml
+scripts/                Screenshot, landing-review, OG-image and showcase-image scripts
+video/promo/            HyperFrames source for the landing page's motion tour
 src/
-  types.ts              Domain types (QrContent union, QrStyle, HistoryEntry)
-  lib/                  Pure logic: encoding, validation, contrast, scan advice, rendering, storage
+  types.ts              Domain types (QrContent union, QrStyle, PhotoStyle, HistoryEntry)
+  lib/                  Pure logic: encoding, validation, contrast, scan advice, rendering,
+                        photo engine (lazy), image processing, IndexedDB store, storage
   hooks/                useQrCanvas, useHistory, useTheme, useDebouncedValue, useRovingRadio
   components/           Shared UI: fields, ColourField, ContentForm, Icon, QrSvg, MorphingCode, brand/
   landing/              Landing page: Hero, TrustStrip, sections/ (lazy below the fold)
-  studio/               Studio: Stage, ExportBar, ScanCheck, DesignPanel, LogoDrop, RecentCodes, Toast
+  studio/               Studio: Stage, ExportBar, ScanCheck, DesignPanel, PhotoStyle, LogoDrop,
+                        RecentCodes, Toast
   styles/               tokens.css (generated), base.css, ui.css, landing.css, studio.css
   router.ts, Link.tsx   Two-route History-API router
-tests/                  e2e.mjs, screenshots.mjs, og-image.mjs
+tests/                  e2e.mjs (148 checks) and fixtures.mjs (synthetic test images)
 ```
 
 ## Important design decisions
@@ -308,7 +324,7 @@ tests/                  e2e.mjs, screenshots.mjs, og-image.mjs
 - Photo QR at the default 320 px is below what ZBar reliably reads for longer content (see the
   decode table); export at 640 px or more for print.
 - Figma was not updated for the Photo panel (the MCP quota was used up in the redesign); the
-  shipped CSS and DESIGN.md are the source of truth for it.
+  shipped CSS and docs/DESIGN.md are the source of truth for it.
 - QR Studio generates codes; it does not read them with a camera.
 
 ## Credits and research
@@ -317,10 +333,26 @@ tests/                  e2e.mjs, screenshots.mjs, og-image.mjs
   ACM SIGGRAPH Asia 2013 (ACM Transactions on Graphics 32(6))**: a decoder only samples the centre
   of each module, so the rest of the module can carry an image.
 - **kloet.net**'s photo QR experiments were visual inspiration for the dots look.
+- The landing page's motion tour was made with **HyperFrames** (open source, by HeyGen), following
+  the workflow in Damiano Caudullo's guide *Motion graphics with Claude Code*: the video is an HTML
+  page with a GSAP timeline ([`video/promo/index.html`](video/promo/index.html)) that Chrome renders
+  frame by frame. Its screens are real screenshots of QR Studio; there is no music or voice.
 - Everything here is my own implementation from those ideas. No code, images, icons or other assets
   were copied from those works or from any QR-styling product or library; the only QR dependency is
   `qrcode`, used for its module matrix.
 
+## About me
+
+I'm **Jagpreet Singh** ([@jagpreetsingh02](https://github.com/jagpreetsingh02)). I built QR Studio
+for the GDG on Campus SRM Technical Recruitment 2026-27, and I tried to treat it as a real product
+rather than a task: every claim on the landing page is something the app can prove, every "it
+scans" is checked by a decoder in the test suite, and the limitations above are written as I
+measured them.
+
+If I keep going, the next steps are the ones I planned but did not start before the deadline:
+custom module and eye shapes, gradients, frames with captions, and a template gallery, each
+behind the same rule that the scan check has to keep passing.
+
 ---
 
-Independent project. Not affiliated with or endorsed by Google.
+Independent project by Jagpreet Singh. Not affiliated with or endorsed by Google.
