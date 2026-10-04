@@ -6,9 +6,11 @@
 
 Designed and built by **[Jagpreet Singh](https://github.com/jagpreetsingh02)** for **GDG on Campus SRM** — Technical Recruitment 2026-27, Frontend Task 1 (QR Code Generator & Designer).
 
-[![Watch the 28-second demo](docs/demo-poster.png)](docs/demo.mp4)
+[![QR Studio: the full 28-second demo](docs/demo.webp)](docs/demo.mp4)
 
-**[Watch the 28-second demo](docs/demo.mp4)**
+The full 28-second demo plays above on a loop. [Open the MP4](docs/demo.mp4) for full quality.
+
+[Watch the demo on Google Drive](https://drive.google.com/file/d/1R6lr0qqIxEHIW23eJI9QF7asXVheDxEw/view?usp=drive_link)
 
 | Landing | Studio |
 | --- | --- |
