@@ -27,11 +27,13 @@ dist-ssr
 .vercel
 .env*
 
-# Design-tool working state (Impeccable)
-.impeccable
-
-# Claude Code local settings
-.claude
-
-# Reference material kept locally, not part of the project
-Motion-Graphics-with-Claude-Code.pdf
+# Local working files, kept on disk but not part of the submission
+video/
+scripts/encode-demo.mjs
+scripts/landing-shots.mjs
+scripts/og-image.mjs
+scripts/screenshots.mjs
+design/qr-svg.mjs
+docs/design-brief.md
+docs/PRODUCT.md
+docs/screenshots/landing-full.png

@@ -237,7 +237,7 @@ The live, engine-rendered QR code is the product and its own proof, so every sur
 
 Two routes share one token set. The landing page (`/`) is expressive: a 1240px container, generous section rhythm, brand-colour shapes and frames. The studio (`/studio`) is a workspace: flat bordered panels on a sunken ground, the stage in the centre, the scan check beside the controls that cause its warnings. Light and dark are first-class; the theme is resolved before first paint from `localStorage` (`qr-studio:theme:v1`) or `prefers-color-scheme` and set as `data-theme` on `<html>`.
 
-**Source of truth.** `design/tokens.mjs` generates `src/styles/tokens.css` (`node design/build-tokens.mjs`) and the Figma variable script, so names match: Figma `color/bg` is CSS `--color-bg`. Never hand-edit `tokens.css`. The Figma library (https://www.figma.com/design/ReC7bi5MHPI7umlpCt3OZM) mirrors the tokens, with light and dark split into two collections, **Theme/Light** and **Theme/Dark**, because the Figma Starter plan allows only one mode per collection. The four `code-*` tokens (`code-bg`, `code-fg`, `code-accent`, `code-mark`) exist in code but are not yet in Figma.
+**Source of truth.** `design/tokens.mjs` defines every token and generates `src/styles/tokens.css`, so token names match the CSS variables: `color/bg` is `--color-bg`. Never hand-edit `tokens.css`.
 
 **Key Characteristics:**
 - Cool neutral ground; GDG blue leads; red, yellow, green as fills that mean something.
@@ -406,7 +406,6 @@ Tokens: `--duration-fast` 120ms (hover, colour), `--duration-base` 200ms (toggle
 - **Do** keep interactive targets at 44px or larger for primary controls (buttons 48px, icon buttons and tabs 44px).
 - **Do** honour reduced motion: the global reset shortens all CSS animation and transition, Motion respects the user setting, and the hero stops cycling and typing.
 - **Do** describe codes to assistive tech by type ("URL QR code preview"), never by reading the payload aloud, and mask Wi-Fi passwords by default.
-- **Do** keep new Figma variables in sync: light values in Theme/Light, dark values in Theme/Dark; add the four `code-*` tokens and the Photo panel when Figma is next updated (neither is in the file yet).
 - **Do** keep photo QR codes on the same white plate as plain codes; the photo's own rounded plate sits inside it.
 
 ### Don't:

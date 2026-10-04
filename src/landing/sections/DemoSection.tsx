@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Reveal } from '../Reveal';
 
 /**
- * A motion-designed tour built with HyperFrames from real app screens (video/promo). It loads only
+ * A 28-second motion tour made from real app screens. It loads only
  * when scrolled near, plays muted while in view, and never autoplays under
  * reduced motion; the native controls are always there.
  */

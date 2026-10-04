@@ -1,8 +1,7 @@
 /**
  * Single source of truth for QR Studio design tokens.
- * `node design/build-tokens.mjs` writes src/styles/tokens.css and the Figma
- * variable script from this file, so names match exactly in both places
- * (Figma `color/bg` <-> CSS `--color-bg`).
+ * `npm run tokens` writes src/styles/tokens.css from this file, so token
+ * names match the CSS variables exactly (`color/bg` <-> `--color-bg`).
  */
 
 export const primitives = {
@@ -58,7 +57,7 @@ export const semantic = {
 export const space = { '0-5': 2, '1': 4, '2': 8, '3': 12, '4': 16, '5': 20, '6': 24, '8': 32, '10': 40, '12': 48, '16': 64, '20': 80, '24': 96, '32': 128 };
 export const radius = { xs: 6, sm: 10, md: 14, lg: 20, xl: 28, '2xl': 40, full: 999 };
 
-/** Seconds (Figma TIMING) — CSS gets milliseconds. */
+/** Seconds — CSS gets milliseconds. */
 export const duration = { fast: 0.12, base: 0.2, slow: 0.32, deliberate: 0.56 };
 export const easing = {
   standard: [0.2, 0, 0, 1],
@@ -74,7 +73,7 @@ export const fonts = {
 
 /**
  * Type ramp. `size` is the desktop size; `min` is the mobile floor used by the
- * CSS clamp(). Letter spacing in percent of font size (Figma PERCENT units).
+ * CSS clamp(). Letter spacing in percent of font size.
  */
 export const type = {
   'display-xl': { font: 'display', weight: 800, size: 84, min: 46, lh: 0.94, ls: -3.5 },

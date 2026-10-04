@@ -17,10 +17,7 @@
     "preview": "vite preview",
     "test:e2e": "vite build && node tests/e2e.mjs",
     "tokens": "node design/build-tokens.mjs",
-    "screenshots": "node scripts/screenshots.mjs",
-    "og-image": "node scripts/og-image.mjs",
-    "landing-assets": "node scripts/landing-assets.mjs",
-    "demo-encode": "node scripts/encode-demo.mjs"
+    "landing-assets": "node scripts/landing-assets.mjs"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
